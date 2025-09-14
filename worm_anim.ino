@@ -13,13 +13,22 @@ typedef struct {
   int8_t offset_y;
 } tile_data;
 
-#define MAX_ANIMATIONS 2
+#define MAX_ANIMATIONS 6
 // frame_count, frame ids
-uint8_t const anim_stand[] PROGMEM = {1, 0};
+uint8_t const anim_stand_r[] PROGMEM = {1, 0};
 uint8_t const anim_walk_r[] PROGMEM = {5, 1, 1, 2, 2, 2};
+uint8_t const anim_stand_r_u[] PROGMEM = {1, 3};
+uint8_t const anim_walk_r_u[] PROGMEM = {5, 4, 4, 5, 5, 5};
+uint8_t const anim_stand_r_d[] PROGMEM = {1, 6};
+uint8_t const anim_walk_r_d[] PROGMEM = {5, 7, 7, 8, 8, 8};
+
 uint8_t* const anim_list[MAX_ANIMATIONS] = {
-  anim_stand,
-  anim_walk_r
+  anim_stand_r,
+  anim_walk_r,
+  anim_stand_r_u,
+  anim_walk_r_u,
+  anim_stand_r_d,
+  anim_walk_r_d
 };
 
 typedef struct {
@@ -30,7 +39,7 @@ typedef struct {
 } anim_data;
 
 anim_data anim = {
-  0, 0, 1, anim_stand
+  0, 0, 1, anim_stand_r
 };
 
 void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
@@ -77,6 +86,11 @@ void loop() {
 
   if (arduboy.justPressed(RIGHT_BUTTON)) {
     anim.anim_id = (anim.anim_id + 1) % MAX_ANIMATIONS;
+    anim.anim_frame = 0;
+    anim.anim_count = pgm_read_byte_near(anim_list[anim.anim_id]);
+  };
+  if (arduboy.justPressed(LEFT_BUTTON)) {
+    anim.anim_id = max(1, anim.anim_id) - 1;
     anim.anim_frame = 0;
     anim.anim_count = pgm_read_byte_near(anim_list[anim.anim_id]);
   };
