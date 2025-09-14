@@ -13,14 +13,18 @@ typedef struct {
   int8_t offset_y;
 } tile_data;
 
-#define MAX_ANIMATIONS 6
+#define MAX_ANIMATIONS 9
 // frame_count, frame ids
-uint8_t const anim_stand_r[] PROGMEM = {1, 0};
-uint8_t const anim_walk_r[] PROGMEM = {5, 1, 1, 2, 2, 2};
-uint8_t const anim_stand_r_u[] PROGMEM = {1, 3};
-uint8_t const anim_walk_r_u[] PROGMEM = {5, 4, 4, 5, 5, 5};
-uint8_t const anim_stand_r_d[] PROGMEM = {1, 6};
-uint8_t const anim_walk_r_d[] PROGMEM = {5, 7, 7, 8, 8, 8};
+uint8_t const anim_stand_r[] PROGMEM =    {1, 0x00};
+uint8_t const anim_walk_r[] PROGMEM =     {4, 0x01, 0x01, 0x02, 0x02};
+uint8_t const anim_stand_r_u[] PROGMEM =  {1, 0x03};
+uint8_t const anim_walk_r_u[] PROGMEM =   {4, 0x04, 0x04, 0x05, 0x05};
+uint8_t const anim_stand_r_d[] PROGMEM =  {1, 0x06};
+uint8_t const anim_walk_r_d[] PROGMEM =   {4, 0x07, 0x07, 0x08, 0x08};
+uint8_t const anim_jumpstart_r[] PROGMEM ={2, 0x09, 0x0A};
+uint8_t const anim_jump_r[] PROGMEM =     {2, 0x0B, 0x0C};
+uint8_t const anim_jumpland_r[] PROGMEM = {2, 0x0D, 0x0E};
+
 
 uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_stand_r,
@@ -28,18 +32,20 @@ uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_stand_r_u,
   anim_walk_r_u,
   anim_stand_r_d,
-  anim_walk_r_d
+  anim_walk_r_d,
+  anim_jumpstart_r,
+  anim_jump_r,
+  anim_jumpland_r
 };
 
 typedef struct {
   uint8_t anim_id;
   uint8_t anim_frame;
   uint8_t anim_count;
-  uint8_t* anim_frames;
 } anim_data;
 
 anim_data anim = {
-  0, 0, 1, anim_stand_r
+  0, 0, 1
 };
 
 void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
@@ -63,7 +69,7 @@ void setup() {
   arduboy.boot();
   arduboy.flashlight();
   arduboy.systemButtons();
-  arduboy.setFrameRate(30);
+  arduboy.setFrameRate(10);
 }
 
 int fillColor = WHITE;
@@ -77,13 +83,13 @@ void loop() {
   counter++;
   arduboy.pollButtons();
 
-
   arduboy.fillScreen(fillColor);
 
   // change background
   if (arduboy.justPressed(A_BUTTON))
     fillColor = (fillColor + 1) % 2;
 
+  // switch animation
   if (arduboy.justPressed(RIGHT_BUTTON)) {
     anim.anim_id = (anim.anim_id + 1) % MAX_ANIMATIONS;
     anim.anim_frame = 0;
@@ -97,14 +103,14 @@ void loop() {
 
   frame = pgm_read_byte_near(anim_list[anim.anim_id] + anim.anim_frame + 1);
   drawFrame(64, 32, frame);
-  anim.anim_frame = (anim.anim_frame + 1) % anim.anim_count;
 
   arduboy.setCursor(0, 0);
   arduboy.print(anim.anim_id, HEX);
   arduboy.setCursor(0, 8);
   arduboy.print(anim.anim_frame);
   arduboy.setCursor(0, 16);
-  arduboy.print(frame);
+  arduboy.print(frame, HEX);
 
+  anim.anim_frame = (anim.anim_frame + counter % 2) % anim.anim_count;
   arduboy.display();
 }
