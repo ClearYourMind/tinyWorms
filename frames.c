@@ -271,164 +271,164 @@ int8_t const frame_20[] PROGMEM = {
   75,  7,  8
 };
 
-// stand_r_d
+// stand_l_d
 int8_t const frame_21[] PROGMEM = {
    3,             // tile count
-   2,  0, -7,     // tile id, x, y 
-  16, -8,  0,
-  17,  0,  0
+  13,  0, -7,     // tile id, x, y 
+  30,  0,  0,
+  31,  8,  0
 };
 
-//walk_r_d
+//walk_l_d
 int8_t const frame_22[] PROGMEM = {
    3,             // tile count
-   2,  0, -7,     // tile id, x, y 
-  18, -8,  0,
-  19,  0,  0
+  13,  0, -7,     // tile id, x, y 
+  28,  0,  0,
+  29,  8,  0
 };
 
 int8_t const frame_23[] PROGMEM = {
    3,             // tile count
-   2,  1, -6,     // tile id, x, y 
-  20, -8,  0,
-  21,  0,  0
+  13, -1, -6,     // tile id, x, y 
+  26,  0,  0,
+  27,  8,  0
 };
 
-//jumpstart_r (walk_r(1) head lowered)
+//jumpstart_l (walk_r(1) head lowered)
 int8_t const frame_24[] PROGMEM = {
    3,             // tile count
-   4, -1, -6,     // tile id, x, y 
-  34, -8,  0,
-  35,  0,  0
+  11,  1, -6,     // tile id, x, y 
+  44,  0,  0,
+  45,  8,  0
 };
 
-//            (walk_r_u(1) shifted forward and up)
+//            (walk_l_u(1) shifted forward and up)
 int8_t const frame_25[] PROGMEM = {
-   5,             // tile count
-   4,  3, -10,     // tile id, x, y 
-  52, -7, -2,
-  53,  1, -2,
-  68, -7,  6,
-  69,  1,  6
+   4,             // tile count
+  11, -3, -10,     // tile id, x, y 
+  58, -1, -2,
+  59,  7, -2,
+  75,  7,  6,
+//  69, -1,  6
 };
 
-// jump_r
+// jump_l
 int8_t const frame_26[] PROGMEM = {
    3,             // tile count
-   2,  0, -8,     // tile id, x, y 
-  22,  0,  0,
-  38,  0,  8
+  13,  0, -8,     // tile id, x, y 
+  25,  0,  0,
+  41,  0,  8
 };
 
 int8_t const frame_27[] PROGMEM = {
    3,             // tile count
-   2,  0, -8,     // tile id, x, y 
-  54,  0,  0,
-  70,  0,  8
+  13,  0, -8,     // tile id, x, y 
+  57,  0,  0,
+  73,  0,  8
 };
 
-// jumpland_r
+// jumpland_l
 // (walk_r(1) head lowered)
 int8_t const frame_28[] PROGMEM = {
    3,             // tile count
-  34, -8,  1,     // tile id, x, y 
-  35,  0,  1,
-   1,  0, -5
+  44,  0,  1,     // tile id, x, y 
+  45,  8,  1,
+  14,  0, -5
 };
 
 int8_t const frame_29[] PROGMEM = {
    3,             // tile count
-  34, -8,  0,     // tile id, x, y 
-  35,  0,  0,
-   1,  0, -5
+  44,  0,  0,     // tile id, x, y 
+  45,  8,  0,
+  14,  0, -5
 };
 
 int8_t const frame_2A[] PROGMEM = {
    3,             // tile count
-   2,  0, -6,     // tile id, x, y 
-  34, -8,  0,
-  35,  0,  0
+  13,  0, -6,     // tile id, x, y 
+  44,  0,  0,
+  45,  8,  0
 };
 
-// slide_r
+// slide_l
 int8_t const frame_2B[] PROGMEM = {
   3,
-  2,  1, -7,
-  44, 0,  0,
-  45, 8,  0,
+  13, -1, -7,
+  34, -8,  0,
+  35,  0,  0,
 };
 
 int8_t const frame_2C[] PROGMEM = {
   3,
-  2,  0, -8,
-  44, 0,  -1,
-  45, 7,  -1,
+  13,  0, -8,
+  34, -7, -1,
+  35,  0, -1,
 };
 
-//slide_r_u
+//slide_l_u
 int8_t const frame_2D[] PROGMEM = {
   3,
-  2,  1, -7,
-  28, 0,  0,
-  29, 8,  0,
+  13, -1, -7,
+  18, -8,  0,
+  19,  0,  0,
 };
 
 int8_t const frame_2E[] PROGMEM = {
   3,
-  2,  0, -8,
-  28, 0,  -1,
-  29, 7,  -1,
+  13,  0, -8,
+  18, -7, -1,
+  19,  0, -1,
 };
 
-//slide_r_d
+//slide_l_d
 int8_t const frame_2F[] PROGMEM = {
   3,
-  2,  0, -7,
-  60, 0, -1,
-  76, 0,  7,
+  13,  0, -7,
+  51,  0, -1,
+  67,  0,  7,
 };
 
 int8_t const frame_30[] PROGMEM = {
   3,
-  2,  1, -7,
-  60, 0,  0,
-  76, 0,  8,
+  13, -1, -7,
+  51,  0,  0,
+  67,  0,  8,
 };
 
 //recover_r (low jump)
 int8_t const frame_31[] PROGMEM = {
    3,             // tile count
-   3,  0, -10,     // tile id, x, y 
-  22,  0,  -2,
-  38,  0,   6
+  12,  0, -10,     // tile id, x, y 
+  25,  0,  -2,
+  41,  0,   6
 };
 
 int8_t const frame_32[] PROGMEM = {
    3,             // tile count
-   3,  0, -11,    // tile id, x, y 
-  54,  0,  -3,
-  70,  0,   5
+  12,  0, -11,    // tile id, x, y 
+  57,  0,  -3,
+  73,  0,   5
 };
 
 int8_t const frame_33[] PROGMEM = {
    3,             // tile count
-   3,  0, -11,    // tile id, x, y 
-  22,  0,  -3,
-  38,  0,   5
+  12,  0, -11,    // tile id, x, y 
+  25,  0,  -3,
+  41,  0,   5
 };
 
 int8_t const frame_34[] PROGMEM = {
    3,             // tile count
-   3,  0, -10,    // tile id, x, y 
-  54,  0,  -2,
-  70,  0,   6
+  12,  0, -10,    // tile id, x, y 
+  57,  0,  -2,
+  73,  0,   6
 };
 
 int8_t const frame_35[] PROGMEM = {
    3,             // tile count
-   3,  0, -8,     // tile id, x, y 
-  22,  0,  0,
-  38,  0,  8
+  12,  0, -8,     // tile id, x, y 
+  25,  0,  0,
+  41,  0,  8
 };
 
 
