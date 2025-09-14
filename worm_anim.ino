@@ -13,7 +13,7 @@ typedef struct {
   int8_t offset_y;
 } tile_data;
 
-#define MAX_ANIMATIONS 9
+#define MAX_ANIMATIONS 13
 // frame_count, frame ids
 uint8_t const anim_stand_r[] PROGMEM =    {1, 0x00};
 uint8_t const anim_walk_r[] PROGMEM =     {4, 0x01, 0x01, 0x02, 0x02};
@@ -23,8 +23,11 @@ uint8_t const anim_stand_r_d[] PROGMEM =  {1, 0x06};
 uint8_t const anim_walk_r_d[] PROGMEM =   {4, 0x07, 0x07, 0x08, 0x08};
 uint8_t const anim_jumpstart_r[] PROGMEM ={2, 0x09, 0x0A};
 uint8_t const anim_jump_r[] PROGMEM =     {2, 0x0B, 0x0C};
-uint8_t const anim_jumpland_r[] PROGMEM = {2, 0x0D, 0x0E};
-
+uint8_t const anim_jumpland_r[] PROGMEM = {3, 0x0D, 0x0E, 0x0F};
+uint8_t const anim_slide_r[] PROGMEM =    {2, 0x10, 0x11};
+uint8_t const anim_slide_r_u[] PROGMEM =  {2, 0x12, 0x13};
+uint8_t const anim_slide_r_d[] PROGMEM =  {2, 0x14, 0x15};
+uint8_t const anim_recover_r[] PROGMEM =  {5, 0x16, 0x17, 0x18, 0x19, 0x1A};
 
 uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_stand_r,
@@ -35,7 +38,11 @@ uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_walk_r_d,
   anim_jumpstart_r,
   anim_jump_r,
-  anim_jumpland_r
+  anim_jumpland_r,
+  anim_slide_r,
+  anim_slide_r_u,
+  anim_slide_r_d,
+  anim_recover_r
 };
 
 typedef struct {
@@ -69,7 +76,7 @@ void setup() {
   arduboy.boot();
   arduboy.flashlight();
   arduboy.systemButtons();
-  arduboy.setFrameRate(10);
+  arduboy.setFrameRate(20);
 }
 
 int fillColor = WHITE;
