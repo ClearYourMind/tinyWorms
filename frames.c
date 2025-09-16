@@ -88,12 +88,12 @@ int8_t const frame_9[] PROGMEM = {
 
 //            (walk_r_u(1) shifted forward and up)
 int8_t const frame_A[] PROGMEM = {
-   5,             // tile count
+   4,             // tile count
    4,  3, -10,     // tile id, x, y 
   52, -7, -2,
   53,  1, -2,
   68, -7,  6,
-  69,  1,  6
+//  69,  1,  6
 };
 
 // jump_r

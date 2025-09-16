@@ -1,5 +1,5 @@
-#ifndef MODEL2DENGINE_H
-#define MODEL2DENGINE_H
+#ifndef FIXEDMATH_H
+#define FIXEDMATH_H
 
 #include <stdint.h>
 #include <avr/pgmspace.h>
@@ -25,7 +25,7 @@ const uint8_t scTab[SCPREC + 1] PROGMEM = {
 
 void getSinCos(uint8_t sec, int32_t *s, int32_t *c) {   // a - angle. must be + and <=360
   uint8_t q = sec >> SCPREC_LOG2;
-   
+
   switch (q) {
   case 0:
     *s = pgm_read_byte_near(scTab + sec % SCPREC);
