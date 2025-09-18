@@ -1,13 +1,9 @@
 #ifndef TEST_ANIMATION_H
 #define TEST_ANIMATION_H
 
-#include "common.h"
-
-typedef struct {
-  uint8_t tile_id;
-  int8_t offset_x;
-  int8_t offset_y;
-} tile_data;
+#include "spritesheet.h"
+#include "frames.c"
+#include "avr/pgmspace.h"
 
 #define MAX_ANIMATIONS 26
 // frame_count, frame ids
@@ -70,39 +66,42 @@ uint8_t* const anim_list[MAX_ANIMATIONS] = {
 };
 
 typedef struct {
-  uint8_t anim_id;
-  uint8_t anim_frame;
-  uint8_t anim_count;
-} anim_data;
-
-anim_data anim = {
-  0, 0, 1
-};
-
-
+  uint8_t id;
+  int8_t offset_x;
+  int8_t offset_y;
+} tile_data;
 
 void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
   uint8_t count = pgm_read_byte_near(frame_list[frame_id] + 0);
   tile_data tile;
   for (uint8_t i=0; i<count; i++) {
-    tile.tile_id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
+    tile.id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
     tile.offset_x = pgm_read_byte_near(frame_list[frame_id] + i*3 + 2);
     tile.offset_y = pgm_read_byte_near(frame_list[frame_id] + i*3 + 3);
     sprites.drawExternalMask(
       x + tile.offset_x,
       y + tile.offset_y,
       spritesheet_worm, spritesheet_worm_mask,
-      tile.tile_id, tile.tile_id
+      tile.id, tile.id
     ); 
   };
 }
 
 
+struct {
+  uint8_t id;
+  uint8_t frame;
+  uint8_t count;
+} anim = {
+  0, 0, 1
+};
+
 int fillColor = WHITE;
-uint16_t counter = 0;
 uint8_t frame;
+uint16_t counter = 0;
 
 void test_animation() {
+  counter++;
   arduboy.fillScreen(fillColor);
 
   // change background
@@ -111,27 +110,27 @@ void test_animation() {
 
   // switch animation
   if (arduboy.justPressed(RIGHT_BUTTON)) {
-    anim.anim_id = (anim.anim_id + 1) % MAX_ANIMATIONS;
-    anim.anim_frame = 0;
-    anim.anim_count = pgm_read_byte_near(anim_list[anim.anim_id]);
+    anim.id = (anim.id + 1) % MAX_ANIMATIONS;
+    anim.frame = 0;
+    anim.count = pgm_read_byte_near(anim_list[anim.id]);
   };
   if (arduboy.justPressed(LEFT_BUTTON)) {
-    anim.anim_id = max(1, anim.anim_id) - 1;
-    anim.anim_frame = 0;
-    anim.anim_count = pgm_read_byte_near(anim_list[anim.anim_id]);
+    anim.id = max(1, anim.id) - 1;
+    anim.frame = 0;
+    anim.count = pgm_read_byte_near(anim_list[anim.id]);
   };
 
-  frame = pgm_read_byte_near(anim_list[anim.anim_id] + anim.anim_frame + 1);
+  frame = pgm_read_byte_near(anim_list[anim.id] + anim.frame + 1);
   drawFrame(64, 32, frame);
 
   arduboy.setCursor(0, 0);
-  arduboy.print(anim.anim_id, HEX);
+  arduboy.print(anim.id, HEX);
   arduboy.setCursor(0, 8);
-  arduboy.print(anim.anim_frame);
+  arduboy.print(anim.frame);
   arduboy.setCursor(0, 16);
   arduboy.print(frame, HEX);
 
-  anim.anim_frame = (anim.anim_frame + counter % 2) % anim.anim_count;
+  anim.frame = (anim.frame + counter % 2) % anim.count;
   arduboy.display();
 
 }

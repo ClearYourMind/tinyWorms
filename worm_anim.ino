@@ -1,6 +1,9 @@
-#include "common.h"
-#include "test_animation.h"
+#include "Arduboy2.h"
 
+Arduboy2 arduboy;
+Sprites sprites;
+
+#include "test_animation.h"
 
 void setup() {
   arduboy.boot();
@@ -14,7 +17,6 @@ void loop() {
   if (!(arduboy.nextFrame()))
     return;
 
-  counter++;
   arduboy.pollButtons();
 
   test_animation();
