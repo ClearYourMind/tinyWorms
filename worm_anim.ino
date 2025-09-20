@@ -3,21 +3,77 @@
 Arduboy2 arduboy;
 Sprites sprites;
 
-#include "test_animation.h"
+#define MAX_LINES 24
+
+uint8_t const ground[] PROGMEM = {
+  4, 8, 
+  0x06, 0x0F, 0x0F, 0x06
+};
+uint32_t field[MAX_LINES] = {
+  0xFFFFFFFF,
+  0x00FFFFFF,
+  0x0001FF1F,
+  0xE0003003,
+  0xC0000001,
+
+  0x00C00007,
+  0x03F0003F,
+  0x01E0380F,
+  0x0001FE07,
+  0x0007FF06,
+
+  0xC00FFF0D,
+  0xF00FFE0E,
+  0x3F03E01A,
+  0xCF80001D,
+  0x31C00035,
+
+  0x0EE0007B,
+  0xC17000EB,
+  0xF0B001D7,
+  0xFE580FA7,
+  0xFF3F3E4F,
+
+  0xFFA7F99F,
+  0xFFD9E63F,
+  0xFFC3187F,
+  0xFFE1E1FF
+};
 
 void setup() {
   arduboy.boot();
   arduboy.flashlight();
   arduboy.systemButtons();
-  arduboy.setFrameRate(20);
+  arduboy.setFrameRate(30);
+  //arduboy.initRandomSeed();
 }
 
+uint16_t counter = 0;
+uint8_t yy = 0;
+uint8_t xx = 0;
+uint8_t line_count = 1;
 
 void loop() {
-  if (!(arduboy.nextFrame()))
+  if (!(arduboy.nextFrameDEV()))
     return;
 
   arduboy.pollButtons();
 
-  test_animation();
+  arduboy.fillScreen(WHITE);
+  // counter++;
+  // if ((counter % MAX_LINES) == 0)
+  //   line_count = (line_count + 1) % MAX_LINES;
+
+  for (uint8_t j=0; j<MAX_LINES; j++) {
+    yy = (j % MAX_LINES) * 2;
+    for (uint8_t i=0; i<32; i++)
+    if ((field[j] >> i & 1) == 1) {
+      xx = ((30-i) << 2) + (2 * (j%2));
+      sprites.drawErase(xx, yy, ground, 0);
+    };
+  };
+
+  arduboy.display();
+
+//  test_animation();
 }
