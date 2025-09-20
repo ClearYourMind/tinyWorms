@@ -6,38 +6,29 @@ Sprites sprites;
 #define MAX_LINES 24
 
 uint8_t const ground[] PROGMEM = {
-  4, 8, 
-  0x06, 0x0F, 0x0F, 0x06
+  7, 8, 
+  0x1C, 0x3E, 0x7F, 0x7F, 0x7F, 0x3E, 0x1C
 };
 uint32_t field[MAX_LINES] = {
   0xFFFFFFFF,
   0x00FFFFFF,
   0x0001FF1F,
   0xE0003003,
-  0xC0000001,
 
+  0xC0000001,
   0x00C00007,
   0x03F0003F,
   0x01E0380F,
+
   0x0001FE07,
   0x0007FF06,
-
   0xC00FFF0D,
   0xF00FFE0E,
+
   0x3F03E01A,
   0xCF80001D,
   0x31C00035,
-
-  0x0EE0007B,
-  0xC17000EB,
-  0xF0B001D7,
-  0xFE580FA7,
-  0xFF3F3E4F,
-
-  0xFFA7F99F,
-  0xFFD9E63F,
-  0xFFC3187F,
-  0xFFE1E1FF
+  0x0EE0007B
 };
 
 void setup() {
@@ -65,10 +56,10 @@ void loop() {
   //   line_count = (line_count + 1) % MAX_LINES;
 
   for (uint8_t j=0; j<MAX_LINES; j++) {
-    yy = (j % MAX_LINES) * 2;
+    yy = j << 2;
     for (uint8_t i=0; i<32; i++)
     if ((field[j] >> i & 1) == 1) {
-      xx = ((30-i) << 2) + (2 * (j%2));
+      xx = (30-i) << 2;
       sprites.drawErase(xx, yy, ground, 0);
     };
   };
