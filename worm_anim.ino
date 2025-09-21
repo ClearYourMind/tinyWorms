@@ -89,21 +89,6 @@ void Player::draw() {
 };
 
 void Player::process() {
-  cx[0] = (x - 2) >> 2;
-  cy[0] = (y + 16) >> 2;
-  cx[1] = (x + 2) >> 2;
-  cy[1] = (y + 16) >> 2;
-  cx[2] = (x - 2) >> 2;
-  cy[2] = (y + 12) >> 2;
-  cx[3] = (x + 2) >> 2;
-  cy[3] = (y + 12) >> 2;
-  cx[4] = x >> 2;
-  cy[4] = y >> 2;
-
-  dy = 1; // gravity
-  landed = (cells & 0x03) > 0;
-  if (landed)
-    dy = 0;
   
   if (arduboy.pressed(UP_BUTTON)) {
     y = max(0, y - walk_speed);
@@ -129,24 +114,39 @@ void Player::process() {
         y += walk_speed;
     };
   };
-  // unstuck
-  if ((cells & 0x0F) == 0x0F)
-    y -= 1;
-
-//  landed = (cells & 0x03) > 0;
 
   y += dy;
 
-  if (arduboy.pressed(A_BUTTON)) {
-    field[cy[0]] = field[cy[0]] | (0x80000000 >> cx[0]);
-  };
-
+  //update cells
+  cx[0] = (x - 2) >> 2;
+  cy[0] = (y + 16) >> 2;
+  cx[1] = (x + 2) >> 2;
+  cy[1] = (y + 16) >> 2;
+  cx[2] = (x - 2) >> 2;
+  cy[2] = (y + 12) >> 2;
+  cx[3] = (x + 2) >> 2;
+  cy[3] = (y + 12) >> 2;
+  cx[4] = x >> 2;
+  cy[4] = y >> 2;
   int32_t cell;
   cells = 0;
   for (int8_t c=0; c<5; c++) {
     cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
     cells |= (cell << c);
   }
+
+  dy = 1; // gravity
+  landed = (cells & 0x03) > 0;
+  if (landed)
+    dy = 0;
+
+  // unstuck
+  if ((cells & 0x0F) == 0x0F)
+    y -= 1;
+
+  if (arduboy.pressed(A_BUTTON)) {
+    field[cy[0]] = field[cy[0]] | (0x80000000 >> cx[0]);
+  };
 };
 
 Player player;
