@@ -47,16 +47,18 @@ class Player {
     int32_t walk_speed;
     int8_t* cx;
     int8_t* cy;
+    int8_t cells;  // binary set of flags
     Player();
     ~Player();
     void draw();
     void process();
+    void checkCells();
 };
 
 Player::Player() {
   walk_speed = 1;
-  cx = new int8_t[3];
-  cy = new int8_t[3];
+  cx = new int8_t[5];
+  cy = new int8_t[5];
 };
 
 Player::~Player() {
@@ -65,44 +67,86 @@ Player::~Player() {
 };
 
 void Player::draw() {
-  int8_t osc = counter % 2;
+  uint8_t osc = counter % 2;
   arduboy.drawFastVLine(x-1, y, 16, osc);
   arduboy.drawFastVLine(x, y, 16, osc);
   arduboy.drawFastVLine(x+1, y, 16, osc);
 
-  arduboy.drawRect(cx[0] << 2, cy[0] << 2, 7, 7, osc);
-  arduboy.drawRect(cx[1] << 2, cy[1] << 2, 7, 7, osc);
+/*  for (uint8_t c = 0; c < 5; c++)
+    arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
+*/
+  arduboy.setCursor(0, 16);
+  arduboy.print(cells & 1);
+  arduboy.setCursor(8, 16);
+  arduboy.print((cells >> 1) & 1);
+  arduboy.setCursor(0, 8);
+  arduboy.print((cells >> 2) & 1);
+  arduboy.setCursor(8, 8);
+  arduboy.print((cells >> 3) & 1);
+  arduboy.setCursor(4, 0);
+  arduboy.print((cells >> 4) & 1);
+
 };
 
 void Player::process() {
-  int32_t cell;
   cx[0] = (x - 2) >> 2;
   cy[0] = (y + 16) >> 2;
   cx[1] = (x + 2) >> 2;
   cy[1] = (y + 16) >> 2;
+  cx[2] = (x - 2) >> 2;
+  cy[2] = (y + 12) >> 2;
+  cx[3] = (x + 2) >> 2;
+  cy[3] = (y + 12) >> 2;
+  cx[4] = x >> 2;
+  cy[4] = y >> 2;
 
+  dy = 1; // gravity
+  landed = (cells & 0x03) > 0;
+  if (landed)
+    dy = 0;
+  
   if (arduboy.pressed(UP_BUTTON)) {
     y = max(0, y - walk_speed);
   };
   if (arduboy.pressed(DOWN_BUTTON)) {
     y = min(HEIGHT, y + walk_speed);
   };
-  if (arduboy.pressed(LEFT_BUTTON)) {
-    x = max(0, x - walk_speed);
+  if (landed) {
+    if (arduboy.pressed(LEFT_BUTTON)) {
+      dir = -1;
+      x = max(0, x - walk_speed);
+      if ((cells & 0x0F) == 0x07)
+        y -= walk_speed;
+      if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0B))
+        y += walk_speed;
+    };
+    if (arduboy.pressed(RIGHT_BUTTON)) {
+      dir = 1;
+      x = min(WIDTH, x + walk_speed);
+      if ((cells & 0x0F) == 0x0B)
+        y -= walk_speed;
+      if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07))
+        y += walk_speed;
+    };
   };
-  if (arduboy.pressed(RIGHT_BUTTON)) {
-    x = min(WIDTH, x + walk_speed);
-  };
+  // unstuck
+  if ((cells & 0x0F) == 0x0F)
+    y -= 1;
+
+//  landed = (cells & 0x03) > 0;
+
+  y += dy;
 
   if (arduboy.pressed(A_BUTTON)) {
     field[cy[0]] = field[cy[0]] | (0x80000000 >> cx[0]);
   };
-  cell = (field[cy[0]] & (0x80000000 >> cx[0])) > 0 ? 1 : 0;
-  arduboy.setCursor(0, 0);
-  arduboy.print(cell);
-  cell = (field[cy[1]] & (0x80000000 >> cx[1])) > 0 ? 1 : 0;
-  arduboy.setCursor(8, 0);
-  arduboy.print(cell);
+
+  int32_t cell;
+  cells = 0;
+  for (int8_t c=0; c<5; c++) {
+    cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
+    cells |= (cell << c);
+  }
 };
 
 Player player;
@@ -139,8 +183,7 @@ void loop() {
   };
 
   player.process();
-  if (counter % 2 == 0)
-    player.draw();
+  player.draw();
 
   arduboy.display();
 
