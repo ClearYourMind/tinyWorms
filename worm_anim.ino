@@ -1,5 +1,6 @@
 #include "Arduboy2.h"
 
+
 Arduboy2 arduboy;
 Sprites sprites;
 
@@ -7,6 +8,7 @@ Sprites sprites;
 
 #define MAX_LINES 16
 #define CELL_COUNT 7      // cells for checking collision
+#define SIGN(x) ((x) > 0) - ((x) < 0)
 
 uint16_t counter = 0;
 
@@ -15,17 +17,17 @@ uint8_t const ground[] PROGMEM = {
   0x1C, 0x3E, 0x7F, 0x7F, 0x7F, 0x3E, 0x1C
 };
 uint32_t field[MAX_LINES] = {
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0x00000000,
+  0xFFFFFFE0,
+  0x0000FFC0,
+  0x00003F80,
+  0x00000601,
 
-  0x000C0000,
-  0x003F0000,
-  0x007FE000,
-  0x00FFE000,
+  0x000C0001,
+  0x003F0003,
+  0x007FE07F,
+  0x00FFE007,
 
-  0x01FFF000,
+  0x01FFF001,
   0x07FFFC03,
   0x07F3FE03,
   0x8FC0FF03,
@@ -39,6 +41,7 @@ uint32_t field[MAX_LINES] = {
 class Player {
   public:
     bool landed;
+    bool o_landed;
     int8_t dir; // -1 .. 1
 
     int32_t x;
@@ -92,16 +95,19 @@ void Player::draw() {
   arduboy.setCursor(4, 0);
   arduboy.print((cells >> 6) & 1);
 
+  if (landed) {
+    arduboy.setCursor(16, 0);
+    arduboy.print("L");
+  };
+  arduboy.setCursor(16, 8);
+  arduboy.print(dx);
+  arduboy.setCursor(24, 8);
+  arduboy.print(dy);
+
 };
 
 void Player::process() {
   
-  if (arduboy.pressed(UP_BUTTON)) {
-    y = max(0, y - walk_speed);
-  };
-  if (arduboy.pressed(DOWN_BUTTON)) {
-    y = min(HEIGHT, y + walk_speed);
-  };
   if (landed) {
     if (arduboy.pressed(LEFT_BUTTON)) {
       dir = -1;
@@ -123,9 +129,26 @@ void Player::process() {
           y += walk_speed;
       };
     };
+    if (arduboy.pressed(A_BUTTON)) {
+      bool jump = false;
+      if ((cells & 0x40) == 0) { // head cell is free
+        if ((dir > 0) & ((cells & 0x20) == 0)) {   // facing right
+          jump = true;
+        } else 
+        if ((dir < 0) & ((cells & 0x10) == 0)) {   // facing left
+          jump = true;
+        };
+      };
+      if (jump) {
+        dy = -4;
+        dx = 2 * dir;
+      };
+
+    };
   };
 
   y += dy;
+  x += dx;
 
   //update cells
   //  feet on ground
@@ -154,18 +177,35 @@ void Player::process() {
     cells |= (cell << c);
   }
 
-  dy = 1; // gravity
+  dy = min(dy + 1, 4); // gravity
   landed = (cells & 0x03) > 0;
-  if (landed)
-    dy = 0;
+  o_landed = landed;
+
+  // process speeds
+  if (landed) {
+    if (dy > 0) {
+      dy = 0;
+      dx = 0;
+    };
+  } else {
+    if (dy < 0) {
+      if ((cells & 0x40) > 0) {   // head hit
+        dy = 0;
+        y++;
+      };
+    };
+    if (dx != 0) {
+      if (((cells & 0x28) > 0) | ((cells & 0x14) > 0)) {
+        x -= SIGN(dx);
+        dx = -dx;
+      };
+    };
+  }
 
   // unstuck
   if ((cells & 0x0F) == 0x0F)
-    y -= 1;
+    y--;
 
-  // if (arduboy.pressed(A_BUTTON)) {
-  //   field[cy[0]] = field[cy[0]] | (0x80000000 >> cx[0]);
-  // };
 };
 
 Player player;
