@@ -106,8 +106,38 @@ void Player::draw() {
 
 };
 
+void Player::checkCells() {
+  //update cells
+  //  feet on ground
+  cx[0] = (x - 2) >> 2;
+  cy[0] = (y + 16) >> 2;
+  cx[1] = (x + 2) >> 2;
+  cy[1] = (y + 16) >> 2;
+  //  climbing cells
+  cx[2] = (x - 2) >> 2;
+  cy[2] = (y + 12) >> 2;
+  cx[3] = (x + 2) >> 2;
+  cy[3] = (y + 12) >> 2;
+  //  wall hit (stopping) cells
+  cx[4] = (x - 2) >> 2;
+  cy[4] = (y + 8) >> 2;
+  cx[5] = (x + 2) >> 2;
+  cy[5] = (y + 8) >> 2;
+  //  head
+  cx[6] = x >> 2;
+  cy[6] = (y + 4) >> 2;
+
+  int32_t cell;
+  cells = 0;
+  for (int8_t c=0; c<CELL_COUNT; c++) {
+    cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
+    cells |= (cell << c);
+  }
+
+}
+
 void Player::process() {
-  
+
   if (landed) {
     if (arduboy.pressed(LEFT_BUTTON)) {
       dir = -1;
@@ -150,32 +180,7 @@ void Player::process() {
   y += dy;
   x += dx;
 
-  //update cells
-  //  feet on ground
-  cx[0] = (x - 2) >> 2;
-  cy[0] = (y + 16) >> 2;
-  cx[1] = (x + 2) >> 2;
-  cy[1] = (y + 16) >> 2;
-  //  climbing cells
-  cx[2] = (x - 2) >> 2;
-  cy[2] = (y + 12) >> 2;
-  cx[3] = (x + 2) >> 2;
-  cy[3] = (y + 12) >> 2;
-  //  wall hit (stopping) cells
-  cx[4] = (x - 2) >> 2;
-  cy[4] = (y + 8) >> 2;
-  cx[5] = (x + 2) >> 2;
-  cy[5] = (y + 8) >> 2;
-  //  head
-  cx[6] = x >> 2;
-  cy[6] = y >> 2;
-
-  int32_t cell;
-  cells = 0;
-  for (int8_t c=0; c<CELL_COUNT; c++) {
-    cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
-    cells |= (cell << c);
-  }
+  checkCells(); // before correcting player position after collision
 
   dy = min(dy + 1, 4); // gravity
   landed = (cells & 0x03) > 0;
@@ -203,8 +208,10 @@ void Player::process() {
   }
 
   // unstuck
-  if ((cells & 0x0F) == 0x0F)
+  if ((cells & 0x0C) == 0x0C) // both climbing cells in ground
     y--;
+
+  checkCells(); // after corrections and before player moving
 
 };
 
