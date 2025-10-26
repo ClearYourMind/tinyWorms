@@ -85,39 +85,39 @@ void Player::draw() {
   arduboy.drawFastVLine(_x, _y, 16, osc);
   arduboy.drawFastVLine(_x+1, _y, 16, osc);
 
-  //if (arduboy.pressed(B_BUTTON)) {
+  if (arduboy.pressed(B_BUTTON)) {
     for (uint8_t c = 0; c < CELL_COUNT; c++)
       arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
+  };
 
-    arduboy.setCursor(0, 24);
-    arduboy.print(cells & 1);
-    arduboy.setCursor(8, 24);
-    arduboy.print((cells >> 1) & 1);
-    arduboy.setCursor(0, 16);
-    arduboy.print((cells >> 2) & 1);
-    arduboy.setCursor(8, 16);
-    arduboy.print((cells >> 3) & 1);
-    arduboy.setCursor(0, 8);
-    arduboy.print((cells >> 4) & 1);
-    arduboy.setCursor(8, 8);
-    arduboy.print((cells >> 5) & 1);
-    arduboy.setCursor(4, 0);
-    arduboy.print((cells >> 6) & 1);
+  arduboy.setCursor(0, 24);
+  arduboy.print(cells & 1);
+  arduboy.setCursor(8, 24);
+  arduboy.print((cells >> 1) & 1);
+  arduboy.setCursor(0, 16);
+  arduboy.print((cells >> 2) & 1);
+  arduboy.setCursor(8, 16);
+  arduboy.print((cells >> 3) & 1);
+  arduboy.setCursor(0, 8);
+  arduboy.print((cells >> 4) & 1);
+  arduboy.setCursor(8, 8);
+  arduboy.print((cells >> 5) & 1);
+  arduboy.setCursor(4, 0);
+  arduboy.print((cells >> 6) & 1);
 
-    if (landed) {
-      arduboy.setCursor(16, 0);
-      arduboy.print("L");
-    };
-    arduboy.setCursor(16, 8);
-    arduboy.print(x);
-    arduboy.setCursor(16, 16);
-    arduboy.print(y);
+  if (landed) {
+    arduboy.setCursor(16, 0);
+    arduboy.print("L");
+  };
+  arduboy.setCursor(24, 0);
+  arduboy.print(x);
+  arduboy.setCursor(24, 8);
+  arduboy.print(y);
 
-    arduboy.setCursor(16, 32);
-    arduboy.print(dx);
-    arduboy.setCursor(16, 40);
-    arduboy.print(dy);
-//  };
+  arduboy.setCursor(80, 0);
+  arduboy.print(dx);
+  arduboy.setCursor(80, 8);
+  arduboy.print(dy);
 };
 
 void Player::checkCells() {
@@ -160,8 +160,11 @@ void Player::process() {
       dir = -1;
       if ((cells & 0x10) == 0) {  // stop cell is free
         x -= walk_speed;
-        if ((cells & 0x0F) == 0x07)
-          y -= walk_speed;
+        if (((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
+          if ((cells & 0x40) > 0) // if head cell hit
+            x += walk_speed; // prevent from moving
+          else
+            y -= walk_speed;
         if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0B))
           y += walk_speed;
       }
@@ -170,8 +173,11 @@ void Player::process() {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
         x += walk_speed;
-        if ((cells & 0x0F) == 0x0B)
-          y -= walk_speed;
+        if (((cells & 0x0F) == 0x0B) | ((cells & 0x0F) == 0x0A))
+          if ((cells & 0x40) > 0) // if head cell hit
+            x -= walk_speed; // prevent from moving
+          else
+            y -= walk_speed;
         if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07))
           y += walk_speed;
       };
@@ -198,7 +204,7 @@ void Player::process() {
 
   checkCells(); // before correcting player position after collision
 
-  dy = dy + GRAVITY; // gravity
+  dy = min(dy + GRAVITY, MAX_SPEED); // gravity
   landed = (cells & 0x03) > 0;
   o_landed = landed;
 
