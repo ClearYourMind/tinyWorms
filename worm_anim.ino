@@ -4,11 +4,13 @@
 Arduboy2 arduboy;
 Sprites sprites;
 
-//#include "FixedMath.c"   // not using fmath by this time
+#include "FixedMath.c"   // not using fmath by this time
 
 #define MAX_LINES 16
 #define CELL_COUNT 7      // cells for checking collision
-#define SIGN(x) ((x) > 0) - ((x) < 0)
+#define SIGN(x) ((x) > 0) - ((x) < 0)   // evaluates X twice !!!
+#define GRAVITY 1 << FBITS
+#define MAX_SPEED 4 << FBITS
 
 uint16_t counter = 0;
 
@@ -42,13 +44,15 @@ class Player {
   public:
     bool landed;
     bool o_landed;
-    int8_t dir; // -1 .. 1
+    int32_t dir; // -1 .. 1
 
     int32_t x;
     int32_t y;
     int32_t dx;
     int32_t dy;
     int32_t walk_speed;
+    int32_t jump_speed_y;
+    int32_t jump_speed_x;
     int8_t* cx;
     int8_t* cy;
     int8_t cells;  // binary set of flags
@@ -60,7 +64,9 @@ class Player {
 };
 
 Player::Player() {
-  walk_speed = 1;
+  walk_speed = 1 << FBITS;
+  jump_speed_y = 4 << FBITS;
+  jump_speed_x = 2 << FBITS;
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
 };
@@ -72,9 +78,11 @@ Player::~Player() {
 
 void Player::draw() {
   uint8_t osc = counter % 2;
-  arduboy.drawFastVLine(x-1, y, 16, osc);
-  arduboy.drawFastVLine(x, y, 16, osc);
-  arduboy.drawFastVLine(x+1, y, 16, osc);
+  uint32_t _x = x >> FBITS;
+  uint32_t _y = y >> FBITS;
+  arduboy.drawFastVLine(_x-1, _y, 16, osc);
+  arduboy.drawFastVLine(_x, _y, 16, osc);
+  arduboy.drawFastVLine(_x+1, _y, 16, osc);
 
   if (arduboy.pressed(B_BUTTON))
   for (uint8_t c = 0; c < CELL_COUNT; c++)
@@ -109,23 +117,26 @@ void Player::draw() {
 void Player::checkCells() {
   //update cells
   //  feet on ground
-  cx[0] = (x - 2) >> 2;
-  cy[0] = (y + 16) >> 2;
-  cx[1] = (x + 2) >> 2;
-  cy[1] = (y + 16) >> 2;
+  uint32_t _x = x >> FBITS;
+  uint32_t _y = y >> FBITS;
+
+  cx[0] = (_x - 2) >> 2;
+  cy[0] = (_y + 16) >> 2;
+  cx[1] = (_x + 2) >> 2;
+  cy[1] = (_y + 16) >> 2;
   //  climbing cells
-  cx[2] = (x - 2) >> 2;
-  cy[2] = (y + 12) >> 2;
-  cx[3] = (x + 2) >> 2;
-  cy[3] = (y + 12) >> 2;
+  cx[2] = (_x - 2) >> 2;
+  cy[2] = (_y + 12) >> 2;
+  cx[3] = (_x + 2) >> 2;
+  cy[3] = (_y + 12) >> 2;
   //  wall hit (stopping) cells
-  cx[4] = (x - 2) >> 2;
-  cy[4] = (y + 8) >> 2;
-  cx[5] = (x + 2) >> 2;
-  cy[5] = (y + 8) >> 2;
+  cx[4] = (_x - 2) >> 2;
+  cy[4] = (_y + 8) >> 2;
+  cx[5] = (_x + 2) >> 2;
+  cy[5] = (_y + 8) >> 2;
   //  head
-  cx[6] = x >> 2;
-  cy[6] = (y + 4) >> 2;
+  cx[6] = _x >> 2;
+  cy[6] = (_y + 4) >> 2;
 
   int32_t cell;
   cells = 0;
@@ -152,7 +163,7 @@ void Player::process() {
     if (arduboy.pressed(RIGHT_BUTTON)) {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
-        x = min(WIDTH, x + walk_speed);
+        x = min(WIDTH << FBITS, x + walk_speed);
         if ((cells & 0x0F) == 0x0B)
           y -= walk_speed;
         if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07))
@@ -170,8 +181,8 @@ void Player::process() {
         };
       };
       if (jump) {
-        dy = -4;
-        dx = 2 * dir;
+        dy = -jump_speed_y;
+        dx = jump_speed_x * dir;
       };
 
     };
@@ -182,7 +193,7 @@ void Player::process() {
 
   checkCells(); // before correcting player position after collision
 
-  dy = min(dy + 1, 4); // gravity
+  dy = min(dy + GRAVITY, MAX_SPEED); // gravity
   landed = (cells & 0x03) > 0;
   o_landed = landed;
 
@@ -196,12 +207,12 @@ void Player::process() {
     if (dy < 0) {
       if ((cells & 0x40) > 0) {   // head hit
         dy = 0;
-        y++;
+        y += (1 << FBITS);
       };
     };
     if (dx != 0) {
       if (((cells & 0x28) > 0) | ((cells & 0x14) > 0)) {
-        x -= SIGN(dx);
+        x -= (1 << FBITS) * SIGN(dx);
         dx = -dx;
       };
     };
@@ -209,7 +220,7 @@ void Player::process() {
 
   // unstuck
   if ((cells & 0x0C) == 0x0C) // both climbing cells in ground
-    y--;
+    y -= (1 << FBITS);
 
   checkCells(); // after corrections and before player moving
 
@@ -222,8 +233,8 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  player.x = 5;
-  player.y = 5;
+  player.x = 5 << FBITS;
+  player.y = 5 << FBITS;
 }
 
 uint8_t yy = 0;
