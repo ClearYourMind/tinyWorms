@@ -6,11 +6,12 @@ Sprites sprites;
 
 #include "FixedMath.c"   // not using fmath by this time
 
+#define F_WIDTH (WIDTH << FBITS)
 #define MAX_LINES 16
 #define CELL_COUNT 7      // cells for checking collision
 #define SIGN(x) ((x) > 0) - ((x) < 0)   // evaluates X twice !!!
-#define GRAVITY 1 << FBITS
-#define MAX_SPEED 4 << FBITS
+#define GRAVITY (1 << (FBITS-2))
+#define MAX_SPEED (4 << FBITS)
 
 uint16_t counter = 0;
 
@@ -64,9 +65,9 @@ class Player {
 };
 
 Player::Player() {
-  walk_speed = 1 << FBITS;
-  jump_speed_y = 4 << FBITS;
-  jump_speed_x = 2 << FBITS;
+  walk_speed = 1 << (FBITS-1); // 0.5
+  jump_speed_y = 2 << FBITS;
+  jump_speed_x = 1 << FBITS;
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
 };
@@ -84,34 +85,39 @@ void Player::draw() {
   arduboy.drawFastVLine(_x, _y, 16, osc);
   arduboy.drawFastVLine(_x+1, _y, 16, osc);
 
-  if (arduboy.pressed(B_BUTTON))
-  for (uint8_t c = 0; c < CELL_COUNT; c++)
-    arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
+  //if (arduboy.pressed(B_BUTTON)) {
+    for (uint8_t c = 0; c < CELL_COUNT; c++)
+      arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
 
-  arduboy.setCursor(0, 24);
-  arduboy.print(cells & 1);
-  arduboy.setCursor(8, 24);
-  arduboy.print((cells >> 1) & 1);
-  arduboy.setCursor(0, 16);
-  arduboy.print((cells >> 2) & 1);
-  arduboy.setCursor(8, 16);
-  arduboy.print((cells >> 3) & 1);
-  arduboy.setCursor(0, 8);
-  arduboy.print((cells >> 4) & 1);
-  arduboy.setCursor(8, 8);
-  arduboy.print((cells >> 5) & 1);
-  arduboy.setCursor(4, 0);
-  arduboy.print((cells >> 6) & 1);
+    arduboy.setCursor(0, 24);
+    arduboy.print(cells & 1);
+    arduboy.setCursor(8, 24);
+    arduboy.print((cells >> 1) & 1);
+    arduboy.setCursor(0, 16);
+    arduboy.print((cells >> 2) & 1);
+    arduboy.setCursor(8, 16);
+    arduboy.print((cells >> 3) & 1);
+    arduboy.setCursor(0, 8);
+    arduboy.print((cells >> 4) & 1);
+    arduboy.setCursor(8, 8);
+    arduboy.print((cells >> 5) & 1);
+    arduboy.setCursor(4, 0);
+    arduboy.print((cells >> 6) & 1);
 
-  if (landed) {
-    arduboy.setCursor(16, 0);
-    arduboy.print("L");
-  };
-  arduboy.setCursor(16, 8);
-  arduboy.print(dx);
-  arduboy.setCursor(24, 8);
-  arduboy.print(dy);
+    if (landed) {
+      arduboy.setCursor(16, 0);
+      arduboy.print("L");
+    };
+    arduboy.setCursor(16, 8);
+    arduboy.print(x);
+    arduboy.setCursor(16, 16);
+    arduboy.print(y);
 
+    arduboy.setCursor(16, 32);
+    arduboy.print(dx);
+    arduboy.setCursor(16, 40);
+    arduboy.print(dy);
+//  };
 };
 
 void Player::checkCells() {
@@ -153,7 +159,7 @@ void Player::process() {
     if (arduboy.pressed(LEFT_BUTTON)) {
       dir = -1;
       if ((cells & 0x10) == 0) {  // stop cell is free
-        x = max(0, x - walk_speed);
+        x -= walk_speed;
         if ((cells & 0x0F) == 0x07)
           y -= walk_speed;
         if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0B))
@@ -163,7 +169,7 @@ void Player::process() {
     if (arduboy.pressed(RIGHT_BUTTON)) {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
-        x = min(WIDTH << FBITS, x + walk_speed);
+        x += walk_speed;
         if ((cells & 0x0F) == 0x0B)
           y -= walk_speed;
         if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07))
@@ -184,7 +190,6 @@ void Player::process() {
         dy = -jump_speed_y;
         dx = jump_speed_x * dir;
       };
-
     };
   };
 
@@ -193,7 +198,7 @@ void Player::process() {
 
   checkCells(); // before correcting player position after collision
 
-  dy = min(dy + GRAVITY, MAX_SPEED); // gravity
+  dy = dy + GRAVITY; // gravity
   landed = (cells & 0x03) > 0;
   o_landed = landed;
 
@@ -233,7 +238,7 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  player.x = 5 << FBITS;
+  player.x = 110 << FBITS;
   player.y = 5 << FBITS;
 }
 
