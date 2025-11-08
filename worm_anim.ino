@@ -1,10 +1,9 @@
 #include "Arduboy2.h"
 
-
 Arduboy2 arduboy;
 Sprites sprites;
 
-#include "FixedMath.c"   // not using fmath by this time
+#include "FixedMath.c"
 
 #define F_WIDTH (WIDTH << FBITS)
 #define MAX_LINES 16
@@ -12,6 +11,7 @@ Sprites sprites;
 #define SIGN(x) ((x) > 0) - ((x) < 0)   // evaluates X twice !!!
 #define GRAVITY (1 << (FBITS-2))
 #define MAX_SPEED (4 << FBITS)
+
 
 uint16_t counter = 0;
 
@@ -45,7 +45,7 @@ class Player {
   public:
     bool landed;
     bool o_landed;
-    int32_t dir; // -1 .. 1
+    int8_t dir; // -1 .. 1
 
     int32_t x;
     int32_t y;
@@ -57,6 +57,7 @@ class Player {
     int8_t* cx;
     int8_t* cy;
     int8_t cells;  // binary set of flags
+
     Player();
     ~Player();
     void draw();
@@ -70,6 +71,8 @@ Player::Player() {
   jump_speed_x = 1 << FBITS;
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
+  dir = 1;
+
 };
 
 Player::~Player() {
@@ -122,10 +125,10 @@ void Player::draw() {
 
 void Player::checkCells() {
   //update cells
-  //  feet on ground
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
 
+  //  feet on ground
   cx[0] = (_x - 2) >> 2;
   cy[0] = (_y + 16) >> 2;
   cx[1] = (_x + 2) >> 2;
@@ -150,7 +153,6 @@ void Player::checkCells() {
     cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
     cells |= (cell << c);
   }
-
 }
 
 void Player::process() {
@@ -165,7 +167,7 @@ void Player::process() {
             x += walk_speed; // prevent from moving
           else
             y -= walk_speed;
-        if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0B))
+        if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
           y += walk_speed;
       }
     };
@@ -173,12 +175,12 @@ void Player::process() {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
         x += walk_speed;
-        if (((cells & 0x0F) == 0x0B) | ((cells & 0x0F) == 0x0A))
+        if (((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
           if ((cells & 0x40) > 0) // if head cell hit
             x -= walk_speed; // prevent from moving
           else
             y -= walk_speed;
-        if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07))
+        if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
           y += walk_speed;
       };
     };
@@ -205,8 +207,8 @@ void Player::process() {
   checkCells(); // before correcting player position after collision
 
   dy = min(dy + GRAVITY, MAX_SPEED); // gravity
-  landed = (cells & 0x03) > 0;
   o_landed = landed;
+  landed = (((cells & 0x03) > 0) & ~(((cells & 0xFF) == 0x15) | ((cells & 0xFF) == 0x2A)));
 
   // process speeds
   if (landed) {
@@ -230,12 +232,11 @@ void Player::process() {
   }
 
   // unstuck
-  if ((cells & 0x0C) == 0x0C) // both climbing cells in ground
+  while ((cells & 0x0C) == 0x0C) {
     y -= (1 << FBITS);
-
-  checkCells(); // after corrections and before player moving
-
-};
+    checkCells(); // after corrections and before player moving
+  };
+}
 
 Player player;
 
@@ -245,7 +246,7 @@ void setup() {
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
   player.x = 110 << FBITS;
-  player.y = 5 << FBITS;
+  player.y = 40 << FBITS;
 }
 
 uint8_t yy = 0;
