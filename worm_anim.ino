@@ -12,6 +12,13 @@ Sprites sprites;
 #define GRAVITY (1 << (FBITS-2))
 #define MAX_SPEED (4 << FBITS)
 
+#define AF_DIAG_DOWN  1
+#define AF_DIAG_UP    2
+#define AF_RIGHT      4
+#define AF_FALL       8
+#define AF_WALK       16
+#define AF_SLIDE      32
+
 
 uint16_t counter = 0;
 
@@ -41,6 +48,10 @@ uint32_t field[MAX_LINES] = {
   0xE0000000
 };
 
+uint8_t setFlag(uint8_t flags, uint8_t flag, bool condition) {
+  return condition ? (flags | flag) : (flags & ~((uint8_t)flag));
+}
+
 class Player {
   public:
     bool landed;
@@ -57,6 +68,7 @@ class Player {
     int8_t* cx;
     int8_t* cy;
     int8_t cells;  // binary set of flags
+    int8_t anim_flags;
 
     Player();
     ~Player();
@@ -236,6 +248,9 @@ void Player::process() {
     y -= (1 << FBITS);
     checkCells(); // after corrections and before player moving
   };
+
+  // set anim flags
+//  anim_flags = setFlag(anim_flags, AF_DIAG_DOWN,  // set specific bit to value
 }
 
 Player player;
