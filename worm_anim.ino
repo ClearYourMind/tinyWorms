@@ -12,8 +12,8 @@ Sprites sprites;
 #define GRAVITY (1 << (FBITS-2))
 #define MAX_SPEED (4 << FBITS)
 
-#define AF_DIAG_DOWN  1
-#define AF_DIAG_UP    2
+#define AF_DIAG_DOWN  1   // :.
+#define AF_DIAG_UP    2   // .:
 #define AF_RIGHT      4
 #define AF_FALL       8
 #define AF_WALK       16
@@ -48,14 +48,17 @@ uint32_t field[MAX_LINES] = {
   0xE0000000
 };
 
-uint8_t setFlag(uint8_t flags, uint8_t flag, bool condition) {
-  return condition ? (flags | flag) : (flags & ~((uint8_t)flag));
+uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
+  return bool_value ? (flags | flag) : (flags & ~((uint8_t)flag));
 }
 
 class Player {
   public:
     bool landed;
     bool o_landed;
+    bool canMove;     // disable controls during some animations (land, recover, jump, fall, hurt..)
+    bool wantJump;    // use when canMove=false but jump button pressed to jump anyway later
+    bool wantShoot;   // use when canMove=false but shoot button pressed to shoot anyway later
     int8_t dir; // -1 .. 1
 
     int32_t x;
@@ -69,11 +72,13 @@ class Player {
     int8_t* cy;
     int8_t cells;  // binary set of flags
     int8_t anim_flags;
+    int8_t frame;
 
     Player();
     ~Player();
     void draw();
     void process();
+    void processAnim();
     void checkCells();
 };
 
@@ -220,7 +225,7 @@ void Player::process() {
 
   dy = min(dy + GRAVITY, MAX_SPEED); // gravity
   o_landed = landed;
-  landed = (((cells & 0x03) > 0) & ~(((cells & 0xFF) == 0x15) | ((cells & 0xFF) == 0x2A)));
+  landed = (((cells & 0x03) > 0) & ~(((cells & 0x3F) == 0x15) | ((cells & 0x3F) == 0x2A)));
 
   // process speeds
   if (landed) {
@@ -249,9 +254,26 @@ void Player::process() {
     checkCells(); // after corrections and before player moving
   };
 
-  // set anim flags
-//  anim_flags = setFlag(anim_flags, AF_DIAG_DOWN,  // set specific bit to value
 }
+
+void Player::processAnim() {
+/*
+#define AF_DIAG_DOWN  1   // :.
+#define AF_DIAG_UP    2   // .:
+#define AF_RIGHT      4
+#define AF_FALL       8
+#define AF_WALK       16 (?)
+#define AF_SLIDE      32
+*/
+    // set anim flags defined by cells config
+  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
+  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
+  anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
+  anim_flags = setFlagAsBool(anim_flags, AF_FALL,      !landed);
+
+
+}
+
 
 Player player;
 
@@ -287,6 +309,7 @@ void loop() {
   };
 
   player.process();
+  player.processAnim();
   player.draw();
 
   arduboy.display();
