@@ -35,6 +35,7 @@ uint8_t const anim_slide_l_u[] PROGMEM =  {2, 0x2D, 0x2E};
 uint8_t const anim_slide_l_d[] PROGMEM =  {2, 0x2F, 0x30};
 uint8_t const anim_recover_l[] PROGMEM =  {5, 0x31, 0x32, 0x33, 0x34, 0x35};
 
+/*
 uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_stand_r,
   anim_walk_r,
@@ -64,6 +65,7 @@ uint8_t* const anim_list[MAX_ANIMATIONS] = {
   anim_slide_l_d,
   anim_recover_l
 };
+*/
 
 typedef struct {
   uint8_t id;
@@ -87,7 +89,7 @@ void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
   };
 }
 
-
+/*
 struct {
   uint8_t id;
   uint8_t frame;
@@ -134,5 +136,6 @@ void test_animation() {
   arduboy.display();
 
 }
+*/
 
 #endif
