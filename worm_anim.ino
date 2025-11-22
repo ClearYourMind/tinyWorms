@@ -27,6 +27,13 @@ Sprites sprites;
 #define CF_JUMP       16
 #define CF_SHOOT      32
 
+// basic animations to switch to
+#define AN_STAND  1
+#define AN_WALK   2
+#define AN_JUMP   3
+#define AN_FALL   4
+#define AN_LAND   5
+
 uint16_t counter = 0;
 
 uint8_t const ground[] PROGMEM = {
@@ -81,9 +88,9 @@ class Player {
   public:
     bool landed;
     bool o_landed;
-    bool canMove;     // disable controls during some animations (land, recover, jump, fall, hurt..)
-    bool wantJump;    // use when canMove=false but jump button pressed to jump anyway later
-    bool wantShoot;   // use when canMove=false but shoot button pressed to shoot anyway later
+    bool can_move;     // disable controls during some animations (land, recover, jump, fall, hurt..)
+    bool want_jump;    // use when canMove=false but jump button pressed to jump anyway later
+    bool want_shoot;   // use when canMove=false but shoot button pressed to shoot anyway later
     int8_t dir; // -1 .. 1
 
     int32_t x;
@@ -95,18 +102,22 @@ class Player {
     int32_t jump_speed_x;
     int8_t* cx;
     int8_t* cy;
-    int8_t cells;  // binary set of flags
-    int8_t anim_flags;
-    int8_t command_flags;
-    int8_t frame;
-    int8_t frame_count;
+    uint8_t cells;  // binary set of flags
+    uint8_t anim_flags;
+    uint8_t command_flags;
+    uint8_t frame;
+    uint8_t frame_count;
+    uint8_t anim_action;
+    bool anim_ended;
     int8_t* anim; // array
 
     Player();
     ~Player();
     void draw();
     void process();
+    void processControls();
     void processAnim();
+    void switchAnim(uint8_t _anim_action);
     void checkCells();
     void commandFromKeys();
 };
@@ -118,7 +129,8 @@ Player::Player() {
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
   dir = 1;
-
+  can_move = true;
+  want_jump = false;
 };
 
 Player::~Player() {
@@ -137,6 +149,7 @@ void Player::draw() {
     arduboy.drawFastVLine(_x+1, _y, 16, osc);
   } else {
     // draw anim frame
+    anim_ended = (frame + osc == frame_count);
     frame = (frame + osc) % frame_count;    // osc = 0..1. Frame added every 2nd step
     uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
     drawFrame(_x, _y + 8, _frame);
@@ -181,9 +194,11 @@ void Player::draw() {
   arduboy.print(command_flags, HEX);
   arduboy.setCursor(85, 8);
   arduboy.print(anim_flags, HEX);
-//  for (uint8_t i=5; i>=0; i--) {
-//    arduboy.print((anim_flags & (1 << i)) ? "1" : "0");
-//  }
+  
+  arduboy.setCursor(96, 0);
+  arduboy.print((uint8_t)anim, HEX);
+  arduboy.setCursor(96, 8);
+  arduboy.print(anim_ended ? "E" : "");
 };
 
 void Player::checkCells() {
@@ -229,37 +244,124 @@ void Player::commandFromKeys() {
 }
 
 
-void Player::process() {
-  commandFromKeys();
+void Player::switchAnim(uint8_t _anim_action) {
+  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
+  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
+  anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
 
+  anim_action = _anim_action;
+  
+  // these switch statements can be replaced with 2D array
+  switch (_anim_action) {
+    case AN_STAND:
+      switch (anim_flags) {
+        case B00000100:
+          anim = anim_stand_r;
+          break;
+        case B00000000:
+          anim = anim_stand_l;
+          break;
+        case B00000101:
+          anim = anim_stand_r_d;
+          break;
+        case B00000110:
+          anim = anim_stand_r_u;
+          break;
+        case B00000001:
+          anim = anim_stand_l_u;
+          break;
+        case B00000010:
+          anim = anim_stand_l_d;
+          break;
+      }
+      break;
+    case AN_WALK:
+      switch (anim_flags) {
+        case B00000000:
+          anim = anim_walk_l;
+          break;
+        case B00000100:
+          anim = anim_walk_r;
+          break;
+        case B00000001:
+          anim = anim_walk_l_u;
+          break;
+        case B00000010:
+          anim = anim_walk_l_d;
+          break;
+        case B00000101:
+          anim = anim_walk_r_d;
+          break;
+        case B00000110:
+          anim = anim_walk_r_u;
+          break;
+      }
+      break;
+    case AN_LAND:
+      break;
+    case AN_JUMP:
+      break;
+    default:
+      anim = NULL;  
+  }
+
+  if (anim) {
+    frame_count = pgm_read_byte_near(anim);
+  }
+
+}
+
+
+void Player::processAnim() {
+  
+  switch (anim_action) {
+    case AN_WALK:
+      break;
+  }
+}
+
+
+void Player::processControls() {
+  if (command_flags == 0)
+    return;
+    
   if (landed) {
-    if (command_flags & CF_LEFT) {
+    if ((command_flags & CF_LEFT) && can_move) {
       dir = -1;
       if ((cells & 0x10) == 0) {  // stop cell is free
-        x -= walk_speed;
-        if (((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))  // less cells checked while climbing up rather than down. Otherwise lifting in air after slope end
+        if (((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))  // climbing up. Less cells checked, otherwise lifting in air after slope end
           if ((cells & 0x40) > 0) // if head cell hit
-            x += walk_speed; // prevent from moving
+            return;   // prevent from moving
           else
             y -= walk_speed;
         if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
           y += walk_speed;
-      }
+        x -= walk_speed;
+        switchAnim(AN_WALK);
+      } else
+        switchAnim(AN_STAND);
+      
     };
-    if (command_flags & CF_RIGHT) {
+    if ((command_flags & CF_RIGHT) && can_move) {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
-        x += walk_speed;
-        if (((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))  // less cells checked while climbing up rather than down. Otherwise lifting in air after slope end
+        if (((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))  // climbing up. Less cells checked, otherwise lifting in air after slope end
           if ((cells & 0x40) > 0) // if head cell hit
-            x -= walk_speed; // prevent from moving
+            return;   // prevent from moving
           else
             y -= walk_speed;
         if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
           y += walk_speed;
-      };
+        x += walk_speed;
+        switchAnim(AN_WALK);
+      } else
+        switchAnim(AN_STAND);
     };
-    if (command_flags & CF_JUMP) {
+    if ((command_flags & CF_JUMP) || want_jump) {
+      if (!can_move) {
+        want_jump = true;
+        return;
+      }
       bool jump = false;
       if ((cells & 0x40) == 0) { // head cell is free
         if ((dir > 0) & ((cells & 0x20) == 0)) {   // facing right
@@ -270,12 +372,26 @@ void Player::process() {
         };
       };
       if (jump) {
+        want_jump = false;
         dy = -jump_speed_y;
         dx = jump_speed_x * dir;
+        switchAnim(AN_JUMP);
       };
     };
   };
+  
+}
 
+
+void Player::process() {
+  commandFromKeys();
+  processControls();
+
+  if (landed) {
+    if (command_flags == 0) 
+      switchAnim(AN_STAND);
+  }
+  
   y += dy;
   x += dx;
 
@@ -284,6 +400,9 @@ void Player::process() {
   dy = min(dy + GRAVITY, MAX_SPEED); // gravity
   o_landed = landed;
   landed = (((cells & 0x03) > 0) & ~(((cells & 0x3F) == 0x15) | ((cells & 0x3F) == 0x2A)));
+  landed &= (dy >= 0); // falling
+  if (landed && (!o_landed))
+    switchAnim(AN_LAND);
 
   // process speeds
   if (landed) {
@@ -312,68 +431,6 @@ void Player::process() {
     checkCells(); // after corrections and before player moving
   };
 
-}
-
-void Player::processAnim() {
-/*
-#define AF_DIAG_DOWN  1   // :.
-#define AF_DIAG_UP    2   // .:
-#define AF_RIGHT      4
-#define AF_FALL       8
-#define AF_WALK       16 (?)
-#define AF_SLIDE      32
-*/
-    // set anim flags defined by cells config
-  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
-  anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
-  anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
-  anim_flags = setFlagAsBool(anim_flags, AF_FALL,      !landed);
-  anim_flags = setFlagAsBool(anim_flags, AF_WALK,      ((command_flags & CF_LEFT) || (command_flags & CF_RIGHT)) & landed);
-
-  anim = NULL;
-
-  switch (anim_flags) {
-    case B00000100:
-      anim = anim_stand_r;
-      break;
-    case B00000000:
-      anim = anim_stand_l;
-      break;
-    case B00000101:
-      anim = anim_stand_r_d;
-      break;
-    case B00000110:
-      anim = anim_stand_r_u;
-      break;
-    case B00000001:
-      anim = anim_stand_l_u;
-      break;
-    case B00000010:
-      anim = anim_stand_l_d;
-      break;
-    case B00010000:
-      anim = anim_walk_l;
-      break;
-    case B00010100:
-      anim = anim_walk_r;
-      break;
-    case B00010001:
-      anim = anim_walk_l_u;
-      break;
-    case B00010010:
-      anim = anim_walk_l_d;
-      break;
-    case B00010101:
-      anim = anim_walk_r_d;
-      break;
-    case B00010110:
-      anim = anim_walk_r_u;
-      break;
-  }
-
-  if (anim) {
-    frame_count = pgm_read_byte_near(anim);
-  }
 }
 
 
