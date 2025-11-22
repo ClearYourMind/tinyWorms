@@ -27,7 +27,7 @@ Sprites sprites;
 #define CF_JUMP       16
 #define CF_SHOOT      32
 
-// basic animations to switch to
+// basic animations to switch to (anim_action)
 #define AN_STAND  1
 #define AN_WALK   2
 #define AN_JUMP   3
@@ -35,6 +35,7 @@ Sprites sprites;
 #define AN_LAND   5
 
 uint16_t counter = 0;
+bool debug_info_toggle = false;
 
 uint8_t const ground[] PROGMEM = {
   7, 8, 
@@ -117,7 +118,7 @@ class Player {
     void process();
     void processControls();
     void processAnim();
-    void switchAnim(uint8_t _anim_action);
+    void switchAnim(uint8_t _anim_action, bool forced = false);
     void checkCells();
     void commandFromKeys();
 };
@@ -129,7 +130,7 @@ Player::Player() {
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
   dir = 1;
-  can_move = true;
+  can_move = false;
   want_jump = false;
 };
 
@@ -149,56 +150,63 @@ void Player::draw() {
     arduboy.drawFastVLine(_x+1, _y, 16, osc);
   } else {
     // draw anim frame
-    anim_ended = (frame + osc == frame_count);
-    frame = (frame + osc) % frame_count;    // osc = 0..1. Frame added every 2nd step
     uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
     drawFrame(_x, _y + 8, _frame);
   }
 
-  if (arduboy.pressed(B_BUTTON)) {
-    for (uint8_t c = 0; c < CELL_COUNT; c++)
+  if (arduboy.justPressed(B_BUTTON))
+    debug_info_toggle = !debug_info_toggle;
+
+  if (debug_info_toggle) {
+    uint8_t c = (counter >> 1) % CELL_COUNT;
+//    for (uint8_t c = 0; c < CELL_COUNT; c++)
       arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
-  };
 
-  arduboy.setCursor(0, 24);
-  arduboy.print(cells & 1);
-  arduboy.setCursor(8, 24);
-  arduboy.print((cells >> 1) & 1);
-  arduboy.setCursor(0, 16);
-  arduboy.print((cells >> 2) & 1);
-  arduboy.setCursor(8, 16);
-  arduboy.print((cells >> 3) & 1);
-  arduboy.setCursor(0, 8);
-  arduboy.print((cells >> 4) & 1);
-  arduboy.setCursor(8, 8);
-  arduboy.print((cells >> 5) & 1);
-  arduboy.setCursor(4, 0);
-  arduboy.print((cells >> 6) & 1);
-
-  if (landed) {
-    arduboy.setCursor(16, 0);
-    arduboy.print("L");
-  };
-  arduboy.setCursor(24, 0);
-  arduboy.print(x);
-  arduboy.setCursor(24, 8);
-  arduboy.print(y);
-
-  arduboy.setCursor(60, 0);
-  arduboy.print(dx);
-  arduboy.setCursor(60, 8);
-  arduboy.print(dy);
-
-  // draw flags
-  arduboy.setCursor(85, 0);
-  arduboy.print(command_flags, HEX);
-  arduboy.setCursor(85, 8);
-  arduboy.print(anim_flags, HEX);
+    arduboy.setCursor(0, 24);
+    arduboy.print(cells & 1);
+    arduboy.setCursor(8, 24);
+    arduboy.print((cells >> 1) & 1);
+    arduboy.setCursor(0, 16);
+    arduboy.print((cells >> 2) & 1);
+    arduboy.setCursor(8, 16);
+    arduboy.print((cells >> 3) & 1);
+    arduboy.setCursor(0, 8);
+    arduboy.print((cells >> 4) & 1);
+    arduboy.setCursor(8, 8);
+    arduboy.print((cells >> 5) & 1);
+    arduboy.setCursor(4, 0);
+    arduboy.print((cells >> 6) & 1);
   
-  arduboy.setCursor(96, 0);
-  arduboy.print((uint8_t)anim, HEX);
-  arduboy.setCursor(96, 8);
-  arduboy.print(anim_ended ? "E" : "");
+    if (landed) {
+      arduboy.setCursor(16, 0);
+      arduboy.print("L");
+    };
+    arduboy.setCursor(24, 0);
+    arduboy.print(x);
+    arduboy.setCursor(24, 8);
+    arduboy.print(y);
+  
+    arduboy.setCursor(60, 0);
+    arduboy.print(dx);
+    arduboy.setCursor(60, 8);
+    arduboy.print(dy);
+  
+    // draw flags
+    arduboy.setCursor(80, 0);
+    arduboy.print(command_flags, HEX);
+    arduboy.setCursor(80, 8);
+    arduboy.print(anim_action);
+    
+    arduboy.setCursor(96, 0);
+    arduboy.print((uint8_t)anim, HEX);
+    arduboy.setCursor(96, 8);
+    arduboy.print(anim_ended ? "E" : "");
+  
+    arduboy.setCursor(112, 0);
+    arduboy.print(can_move ? "o" : "x");
+    arduboy.setCursor(112, 8);
+    arduboy.print(want_jump ? "j" : " ");
+  }
 };
 
 void Player::checkCells() {
@@ -235,20 +243,28 @@ void Player::checkCells() {
 
 
 void Player::commandFromKeys() {
+  // B button not used in controls by now
   command_flags = setFlagAsBool(command_flags, CF_LEFT,  arduboy.pressed(LEFT_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_RIGHT, arduboy.pressed(RIGHT_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_UP,    arduboy.pressed(UP_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_DOWN,  arduboy.pressed(DOWN_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_JUMP,  arduboy.pressed(A_BUTTON));
-  command_flags = setFlagAsBool(command_flags, CF_SHOOT, arduboy.pressed(B_BUTTON));
+//  command_flags = setFlagAsBool(command_flags, CF_SHOOT, arduboy.pressed(B_BUTTON));
 }
 
 
-void Player::switchAnim(uint8_t _anim_action) {
+void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
   anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
 
+  // some anims block switching
+  if (!forced)
+  switch (anim_action) {
+    case AN_LAND:
+    case AN_JUMP:
+      return;
+  }
   anim_action = _anim_action;
   
   // these switch statements can be replaced with 2D array
@@ -298,8 +314,28 @@ void Player::switchAnim(uint8_t _anim_action) {
       }
       break;
     case AN_LAND:
+      frame = 0;
+      anim_ended = false;
+      can_move = false;
+      if (dir == -1)
+        anim = anim_jumpland_l;
+      else
+        anim = anim_jumpland_r;
       break;
     case AN_JUMP:
+      frame = 0;
+      anim_ended = false;
+      can_move = false;
+      if (dir == -1)
+        anim = anim_jumpstart_l;
+      else
+        anim = anim_jumpstart_r;
+      break;
+    case AN_FALL:
+      if (dir == -1)
+        anim = anim_jump_l;
+      else
+        anim = anim_jump_r;
       break;
     default:
       anim = NULL;  
@@ -312,18 +348,43 @@ void Player::switchAnim(uint8_t _anim_action) {
 }
 
 
-void Player::processAnim() {
-  
+void Player::processAnim() {  
+  if (arduboy.everyXFrames(3))
+    frame++;
+   
+  anim_ended = (frame == frame_count);
+  frame = frame % frame_count;
+ 
   switch (anim_action) {
     case AN_WALK:
+      if (!landed) {
+        frame = 0;
+        switchAnim(AN_FALL, true);
+      }
+    case AN_STAND:
+      break;
+    case AN_LAND:
+      if (anim_ended) {
+        switchAnim(AN_STAND, true);
+        can_move = true;
+      }
+      break;
+    case AN_JUMP:
+      if (anim_ended) {
+        switchAnim(AN_FALL, true);
+      }
+      if (landed)
+        can_move = true;
+      break;
+    case AN_FALL:
+      if (landed)
+        can_move = true;
       break;
   }
 }
 
 
 void Player::processControls() {
-  if (command_flags == 0)
-    return;
     
   if (landed) {
     if ((command_flags & CF_LEFT) && can_move) {
@@ -401,9 +462,10 @@ void Player::process() {
   o_landed = landed;
   landed = (((cells & 0x03) > 0) & ~(((cells & 0x3F) == 0x15) | ((cells & 0x3F) == 0x2A)));
   landed &= (dy >= 0); // falling
-  if (landed && (!o_landed))
+  if (landed && (!o_landed)) {
     switchAnim(AN_LAND);
-
+  }
+  
   // process speeds
   if (landed) {
     if (dy > 0) {
