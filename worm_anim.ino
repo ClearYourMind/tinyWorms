@@ -34,6 +34,26 @@ Sprites sprites;
 #define AN_FALL   4
 #define AN_LAND   5
 
+// anim set based on anim_flags
+int8_t* const anim_stand_set[] = {
+  anim_stand_l,
+  anim_stand_l_u,
+  anim_stand_l_d,
+  NULL,
+  anim_stand_r,
+  anim_stand_r_d,
+  anim_stand_r_u
+};
+int8_t* const anim_walk_set[] = {
+  anim_walk_l,
+  anim_walk_l_u,
+  anim_walk_l_d,
+  NULL,
+  anim_walk_r,
+  anim_walk_r_d,
+  anim_walk_r_u
+};
+
 uint16_t counter = 0;
 bool debug_info_toggle = false;
 
@@ -85,6 +105,7 @@ uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
   return bool_value ? (flags | flag) : (flags & ~((uint8_t)flag));
 }
 
+
 class Player {
   public:
     bool landed;
@@ -104,7 +125,6 @@ class Player {
     int8_t* cx;
     int8_t* cy;
     uint8_t cells;  // binary set of flags
-    uint8_t anim_flags;
     uint8_t command_flags;
     uint8_t frame;
     uint8_t frame_count;
@@ -125,7 +145,7 @@ class Player {
 
 Player::Player() {
   walk_speed = 1 << FBITS;
-  jump_speed_y = 3 << FBITS;
+  jump_speed_y = 5 << (FBITS-1);  // 2.5
   jump_speed_x = 3 << (FBITS-1);  // 1.5
   cx = new int8_t[CELL_COUNT];
   cy = new int8_t[CELL_COUNT];
@@ -154,13 +174,14 @@ void Player::draw() {
     drawFrame(_x, _y + 8, _frame);
   }
 
-  if (arduboy.justPressed(B_BUTTON))
+  if (arduboy.justPressed(B_BUTTON)) {
     debug_info_toggle = !debug_info_toggle;
+    arduboy.setFrameRate( debug_info_toggle ? 10 : 30);
+  }
 
   if (debug_info_toggle) {
     uint8_t c = (counter >> 1) % CELL_COUNT;
-//    for (uint8_t c = 0; c < CELL_COUNT; c++)
-      arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
+    arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
 
     arduboy.setCursor(0, 24);
     arduboy.print(cells & 1);
@@ -254,6 +275,7 @@ void Player::commandFromKeys() {
 
 
 void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
+  uint8_t anim_flags = 0;
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
   anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
@@ -270,48 +292,10 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
   // these switch statements can be replaced with 2D array
   switch (_anim_action) {
     case AN_STAND:
-      switch (anim_flags) {
-        case B00000100:
-          anim = anim_stand_r;
-          break;
-        case B00000000:
-          anim = anim_stand_l;
-          break;
-        case B00000101:
-          anim = anim_stand_r_d;
-          break;
-        case B00000110:
-          anim = anim_stand_r_u;
-          break;
-        case B00000001:
-          anim = anim_stand_l_u;
-          break;
-        case B00000010:
-          anim = anim_stand_l_d;
-          break;
-      }
+      anim = anim_stand_set[anim_flags];
       break;
     case AN_WALK:
-      switch (anim_flags) {
-        case B00000000:
-          anim = anim_walk_l;
-          break;
-        case B00000100:
-          anim = anim_walk_r;
-          break;
-        case B00000001:
-          anim = anim_walk_l_u;
-          break;
-        case B00000010:
-          anim = anim_walk_l_d;
-          break;
-        case B00000101:
-          anim = anim_walk_r_d;
-          break;
-        case B00000110:
-          anim = anim_walk_r_u;
-          break;
-      }
+      anim = anim_walk_set[anim_flags];
       break;
     case AN_LAND:
       frame = 0;
@@ -422,7 +406,8 @@ void Player::processControls() {
       if (!can_move) {
         want_jump = true;
         return;
-      }
+      } else
+        want_jump = false;
       bool jump = false;
       if ((cells & 0x40) == 0) { // head cell is free
         if ((dir > 0) & ((cells & 0x20) == 0)) {   // facing right
@@ -433,7 +418,6 @@ void Player::processControls() {
         };
       };
       if (jump) {
-        want_jump = false;
         dy = -jump_speed_y;
         dx = jump_speed_x * dir;
         switchAnim(AN_JUMP);
@@ -480,7 +464,7 @@ void Player::process() {
       };
     };
     if (dx != 0) {
-      if (((cells & 0x28) > 0) | ((cells & 0x14) > 0)) {
+      if ((cells & 0x30) > 0) {
         x -= (1 << FBITS) * SIGN(dx);
         dx = -dx;
       };
