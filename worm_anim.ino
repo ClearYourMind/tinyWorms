@@ -135,6 +135,7 @@ class Player {
     Player();
     ~Player();
     void draw();
+    void drawDebugOverlay();
     void process();
     void processControls();
     void processAnim();
@@ -159,75 +160,75 @@ Player::~Player() {
   delete [] cy;
 };
 
-void Player::draw() {
+
+void Player::drawDebugOverlay() {
   uint8_t osc = counter % 2;
+
+  uint8_t c = (counter >> 1) % CELL_COUNT;
+  arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
+
+  arduboy.setCursor(0, 24);
+  arduboy.print(cells & 1);
+  arduboy.setCursor(8, 24);
+  arduboy.print((cells >> 1) & 1);
+  arduboy.setCursor(0, 16);
+  arduboy.print((cells >> 2) & 1);
+  arduboy.setCursor(8, 16);
+  arduboy.print((cells >> 3) & 1);
+  arduboy.setCursor(0, 8);
+  arduboy.print((cells >> 4) & 1);
+  arduboy.setCursor(8, 8);
+  arduboy.print((cells >> 5) & 1);
+  arduboy.setCursor(4, 0);
+  arduboy.print((cells >> 6) & 1);
+
+  if (landed) {
+    arduboy.setCursor(16, 0);
+    arduboy.print("L");
+  };
+  arduboy.setCursor(24, 0);
+  arduboy.print(x);
+  arduboy.setCursor(24, 8);
+  arduboy.print(y);
+
+  arduboy.setCursor(60, 0);
+  arduboy.print(dx);
+  arduboy.setCursor(60, 8);
+  arduboy.print(dy);
+
+  // draw flags
+  arduboy.setCursor(80, 0);
+  arduboy.print(command_flags, HEX);
+  arduboy.setCursor(80, 8);
+  arduboy.print(anim_action);
+  
+  arduboy.setCursor(96, 0);
+  arduboy.print((uint8_t)anim, HEX);
+  arduboy.setCursor(96, 8);
+  arduboy.print(anim_ended ? "E" : "");
+
+  arduboy.setCursor(112, 0);
+  arduboy.print(can_move ? "o" : "x");
+  arduboy.setCursor(112, 8);
+  arduboy.print(want_jump ? "j" : " ");
+}
+
+
+void Player::draw() {
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
 
-  if (anim == NULL) {
-    arduboy.drawFastVLine(_x-1, _y, 16, osc);
-    arduboy.drawFastVLine(_x, _y, 16, osc);
-    arduboy.drawFastVLine(_x+1, _y, 16, osc);
-  } else {
-    // draw anim frame
-    uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
-    drawFrame(_x, _y + 8, _frame);
-  }
+  // draw anim frame
+  uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
+  drawFrame(_x, _y + 8, _frame);
 
   if (arduboy.justPressed(B_BUTTON)) {
     debug_info_toggle = !debug_info_toggle;
     arduboy.setFrameRate( debug_info_toggle ? 10 : 30);
   }
 
-  if (debug_info_toggle) {
-    uint8_t c = (counter >> 1) % CELL_COUNT;
-    arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
-
-    arduboy.setCursor(0, 24);
-    arduboy.print(cells & 1);
-    arduboy.setCursor(8, 24);
-    arduboy.print((cells >> 1) & 1);
-    arduboy.setCursor(0, 16);
-    arduboy.print((cells >> 2) & 1);
-    arduboy.setCursor(8, 16);
-    arduboy.print((cells >> 3) & 1);
-    arduboy.setCursor(0, 8);
-    arduboy.print((cells >> 4) & 1);
-    arduboy.setCursor(8, 8);
-    arduboy.print((cells >> 5) & 1);
-    arduboy.setCursor(4, 0);
-    arduboy.print((cells >> 6) & 1);
-  
-    if (landed) {
-      arduboy.setCursor(16, 0);
-      arduboy.print("L");
-    };
-    arduboy.setCursor(24, 0);
-    arduboy.print(x);
-    arduboy.setCursor(24, 8);
-    arduboy.print(y);
-  
-    arduboy.setCursor(60, 0);
-    arduboy.print(dx);
-    arduboy.setCursor(60, 8);
-    arduboy.print(dy);
-  
-    // draw flags
-    arduboy.setCursor(80, 0);
-    arduboy.print(command_flags, HEX);
-    arduboy.setCursor(80, 8);
-    arduboy.print(anim_action);
-    
-    arduboy.setCursor(96, 0);
-    arduboy.print((uint8_t)anim, HEX);
-    arduboy.setCursor(96, 8);
-    arduboy.print(anim_ended ? "E" : "");
-  
-    arduboy.setCursor(112, 0);
-    arduboy.print(can_move ? "o" : "x");
-    arduboy.setCursor(112, 8);
-    arduboy.print(want_jump ? "j" : " ");
-  }
+  if (debug_info_toggle) 
+    drawDebugOverlay();
 };
 
 void Player::checkCells() {
