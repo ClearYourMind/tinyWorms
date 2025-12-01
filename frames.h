@@ -1,3 +1,6 @@
+#ifndef FRAMES_H
+#define FRAMES_H
+
 #include "Arduino.h"
 
 
@@ -432,7 +435,7 @@ int8_t const frame_35[] PROGMEM = {
 };
 
 
-int8_t* const frame_list[] = {
+uint8_t* const frame_list[] = {
   frame_0, frame_1, frame_2, frame_3, frame_4, frame_5, frame_6, frame_7, 
   frame_8, frame_9, frame_A, frame_B, frame_C, frame_D, frame_E, frame_F,
   frame_10, frame_11, frame_12, frame_13, frame_14, frame_15, frame_16, frame_17,
@@ -440,5 +443,6 @@ int8_t* const frame_list[] = {
   frame_20, frame_21, frame_22, frame_23, frame_24, frame_25, frame_26, frame_27,
   frame_28, frame_29, frame_2A, frame_2B, frame_2C, frame_2D, frame_2E, frame_2F,
   frame_30, frame_31, frame_32, frame_33, frame_34, frame_35
-  
 };
+
+#endif

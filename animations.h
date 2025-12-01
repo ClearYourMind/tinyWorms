@@ -2,7 +2,7 @@
 #define ANIMATIONS
 
 #include "spritesheet.h"
-#include "frames.c"
+#include "frames.h"
 #include "avr/pgmspace.h"
 
 // frame_count, frame ids

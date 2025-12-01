@@ -31,6 +31,7 @@
 
 
 #define F_WIDTH (WIDTH << FBITS)
+#define F_HEIGHT (HEIGHT << FBITS)
 #define SIGN(x) ((x) > 0) - ((x) < 0)   // evaluates X twice !!!
 #define GRAVITY (1 << (FBITS-2))
 #define MAX_SPEED (4 << FBITS)
@@ -43,8 +44,8 @@ extern Sprites sprites;
 extern bool debug_info_toggle;
 
 extern uint32_t field[MAX_LINES];
-extern int8_t* const anim_stand_set[7];
-extern int8_t* const anim_walk_set[7];
+extern uint8_t* const anim_stand_set[7];
+extern uint8_t* const anim_walk_set[7];
 
 extern uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value);
 extern void drawFrame(int8_t x, int8_t y, uint8_t frame_id);
@@ -73,7 +74,7 @@ class Player {
     uint8_t frame_count;
     uint8_t anim_action;
     bool anim_ended;
-    int8_t* anim; // array
+    uint8_t* anim; // array
 
     Player();
     ~Player();

@@ -1,7 +1,13 @@
 #include "Arduboy2.h"
 
 #include "animations.h"
-#include "player.h"
+
+#define F_WIDTH (WIDTH << FBITS)
+#define F_HEIGHT (HEIGHT << FBITS)
+
+//#include "player.h"
+#include "camera.h"
+#include "fixedmath.h"
 
 Arduboy2 arduboy;
 Sprites sprites;
@@ -11,7 +17,7 @@ Sprites sprites;
 
 
 // anim set based on anim_flags
-int8_t* const anim_stand_set[] = {
+uint8_t* const anim_stand_set[] = {
   anim_stand_l,
   anim_stand_l_u,
   anim_stand_l_d,
@@ -20,7 +26,7 @@ int8_t* const anim_stand_set[] = {
   anim_stand_r_d,
   anim_stand_r_u
 };
-int8_t* const anim_walk_set[] = {
+uint8_t* const anim_walk_set[] = {
   anim_walk_l,
   anim_walk_l_u,
   anim_walk_l_d,
@@ -104,20 +110,31 @@ void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
   };
 }
 
-Player player;
+void drawField() {
+  uint8_t yy = 0;
+  uint8_t xx = 0;
+  for (uint8_t j=0; j<MAX_LINES; j++) {
+    yy = j << 2;
+    for (uint8_t i=0; i<32; i++)
+    if ((field[j] & (0x80000000 >> i)) > 0) {
+      xx = i << 2;
+      sprites.drawErase(xx, yy, ground, 0);
+    };
+  };
+}
+
+
+//Player player;
+Camera camera;
 
 void setup() {
   arduboy.boot();
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  player.x = 110 << FBITS;
-  player.y = 40 << FBITS;
+//  player.x = 110 << FBITS;
+//  player.y = 40 << FBITS;
 }
-
-uint8_t yy = 0;
-uint8_t xx = 0;
-uint8_t line_count = 1;
 
 void loop() {
   if (!(arduboy.nextFrameDEV()))
@@ -128,18 +145,14 @@ void loop() {
   arduboy.fillScreen(WHITE);
   counter++;
 
-  for (uint8_t j=0; j<MAX_LINES; j++) {
-    yy = j << 2;
-    for (uint8_t i=0; i<32; i++)
-    if ((field[j] & (0x80000000 >> i)) > 0) {
-      xx = i << 2;
-      sprites.drawErase(xx, yy, ground, 0);
-    };
-  };
-
-  player.process();
-  player.processAnim();
-  player.draw();
+  //player.process();
+  camera.processControls();
+  camera.process();
+  
+  drawField();
+  camera.drawDebugOverlay();
+  //player.processAnim();
+  //player.draw();
 
   arduboy.display();
 
