@@ -12,8 +12,8 @@
 Arduboy2 arduboy;
 Sprites sprites;
 
-
-#define MAX_LINES 16
+#define CELL_COUNT_X 32 // WIDTH >> 2
+#define CELL_COUNT_Y 16 // HEIGHT >> 2
 
 
 // anim set based on anim_flags
@@ -44,27 +44,53 @@ uint8_t const ground[] PROGMEM = {
   0x1C, 0x3E, 0x7F, 0x7F, 0x7F, 0x3E, 0x1C
 };
 
-uint32_t field[MAX_LINES] = {
-  0xFFFFFFE0,
-  0x0000FFC0,
-  0x00003F80,
-  0x00000601,
+uint32_t field[2][CELL_COUNT_Y] = {
+  {
+    0xFFFFFFE0,
+    0x0000FFC0,
+    0x00003F80,
+    0x00000601,
 
-  0x000C0001,
-  0x003F0003,
-  0x007FE07F,
-  0x00FFE007,
+    0x000C0001,
+    0x003F0003,
+    0x007FE07F,
+    0x00FFE007,
 
-  0x01FFF001,
-  0x07FFFC03,
-  0x07F3FE03,
-  0x8FC0FF03,
+    0x01FFF001,
+    0x07FFFC03,
+    0x07F3FE03,
+    0x8FC0FF03,
 
-  0x9F003FFF,
-  0xFC000FFF,
-  0xF80000FF,
-  0xE0000000
+    0x9F003FFF,
+    0xFC000FFF,
+    0xF80000FF,
+    0xE0000000
+  },
+  {
+    0xFFFFFFE0,
+    0x0000FFC0,
+    0x00003F80,
+    0x00000601,
+
+    0x000C0001,
+    0x003F0003,
+    0x007FE07F,
+    0x00FFE007,
+
+    0x01FFF001,
+    0x07FFFC03,
+    0x07F3FE03,
+    0x8FC0FF03,
+
+    0x9F003FFF,
+    0xFC000FFF,
+    0xF80000FF,
+    0xE0000000
+  }
+
 };
+
+Camera camera;
 
 
 void debug_stop(int32_t value, const char message[] = NULL) {
@@ -113,19 +139,23 @@ void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
 void drawField() {
   uint8_t yy = 0;
   uint8_t xx = 0;
-  for (uint8_t j=0; j<MAX_LINES; j++) {
-    yy = j << 2;
-    for (uint8_t i=0; i<32; i++)
-    if ((field[j] & (0x80000000 >> i)) > 0) {
-      xx = i << 2;
-      sprites.drawErase(xx, yy, ground, 0);
+  for (uint8_t j=camera.cell_y; j<CELL_COUNT_Y; j++) {
+    yy = (j << 2) - (camera.y >> FBITS);
+    for (uint8_t i=camera.cell_x; i<CELL_COUNT_X; i++) {
+      xx = (i << 2) - (camera.x >> FBITS);
+      if (field[0][j] & (0x80000000 >> i))
+        sprites.drawErase(xx, yy, ground, 0);
+    };
+    for (uint8_t i=0; i<camera.cell_x; i++) {
+      xx = ((i + 32) << 2) - (camera.x >> FBITS);
+      if (field[1][j] & (0x80000000 >> i))
+        sprites.drawErase(xx, yy, ground, 0);
     };
   };
 }
 
 
 //Player player;
-Camera camera;
 
 void setup() {
   arduboy.boot();
