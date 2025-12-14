@@ -4,11 +4,7 @@
 #include "Arduino.h"
 #include "fixedmath.h"
 #include "Arduboy2.h"
-
-#define F_WIDTH (WIDTH << FBITS)
-#define F_HEIGHT (HEIGHT << FBITS)
-#define F_WIDTH_H (F_WIDTH >> 1)
-#define F_HEIGHT_H (F_HEIGHT >> 1)
+#include "common.h"
 
 extern Arduboy2 arduboy;
 extern uint16_t counter;

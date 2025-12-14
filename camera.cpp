@@ -1,5 +1,5 @@
 #include "camera.h"
-
+#include "common.h"
 
 void Camera::process() {
   int16_t dx; // fixed

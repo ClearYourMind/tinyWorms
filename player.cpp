@@ -1,5 +1,5 @@
 #include "player.h"
-
+#include "common.h"
 
 Player::Player() {
   walk_speed = 1 << FBITS;
@@ -114,7 +114,7 @@ void Player::checkCells() {
   int32_t cell;
   cells = 0;
   for (int8_t c=0; c<CELL_COUNT; c++) {
-    cell = (field[cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
+    cell = (field[0][cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
     cells |= (cell << c);
   }
 }

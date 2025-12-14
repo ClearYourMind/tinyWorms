@@ -6,6 +6,8 @@
 #include "fixedmath.h"
 #include "animations.h"
 
+#include "common.h"
+
 #define CELL_COUNT 7      // cells for checking collision
 
 #define AF_DIAG_DOWN  1   // :.
@@ -30,25 +32,35 @@
 #define AN_LAND   5
 
 
-#define F_WIDTH (WIDTH << FBITS)
-#define F_HEIGHT (HEIGHT << FBITS)
-#define SIGN(x) ((x) > 0) - ((x) < 0)   // evaluates X twice !!!
-#define GRAVITY (1 << (FBITS-2))
-#define MAX_SPEED (4 << FBITS)
-#define MAX_LINES 16
-
-
 extern uint16_t counter;
 extern Arduboy2 arduboy;
 extern Sprites sprites;
 extern bool debug_info_toggle;
 
-extern uint32_t field[MAX_LINES];
-extern uint8_t* const anim_stand_set[7];
-extern uint8_t* const anim_walk_set[7];
+extern uint32_t field[4][CELL_COUNT_Y];
 
 extern uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value);
 extern void drawFrame(int8_t x, int8_t y, uint8_t frame_id);
+
+// anim set based on anim_flags
+uint8_t* const anim_stand_set[] = {
+  anim_stand_l,
+  anim_stand_l_u,
+  anim_stand_l_d,
+  NULL,
+  anim_stand_r,
+  anim_stand_r_d,
+  anim_stand_r_u
+};
+uint8_t* const anim_walk_set[] = {
+  anim_walk_l,
+  anim_walk_l_u,
+  anim_walk_l_d,
+  NULL,
+  anim_walk_r,
+  anim_walk_r_d,
+  anim_walk_r_u
+};
 
 class Player {
   public:
