@@ -1,12 +1,13 @@
 #include "player.h"
 #include "common.h"
+#include "camera.h"
 
 Player::Player() {
   walk_speed = 1 << FBITS;
   jump_speed_y = 5 << (FBITS-1);  // 2.5
   jump_speed_x = 3 << (FBITS-1);  // 1.5
-  cx = new int8_t[CELL_COUNT];
-  cy = new int8_t[CELL_COUNT];
+  cx = new int8_t[CELL_CHECK_COUNT];
+  cy = new int8_t[CELL_CHECK_COUNT];
   dir = 1;
   can_move = false;
   want_jump = false;
@@ -20,7 +21,7 @@ Player::~Player() {
 void Player::drawDebugOverlay() {
   uint8_t osc = counter % 2;
 
-  uint8_t c = (counter >> 1) % CELL_COUNT;
+  uint8_t c = (counter >> 1) % CELL_CHECK_COUNT;
   arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
 
   arduboy.setCursor(0, 24);
@@ -70,27 +71,24 @@ void Player::drawDebugOverlay() {
 }
 
 
-void Player::draw() {
-  uint32_t _x = x >> FBITS;
-  uint32_t _y = y >> FBITS;
+void Player::draw(Camera camera) {
+  uint32_t _x = (x - camera.x) >> FBITS;
+  uint32_t _y = (y - camera.y) >> FBITS;
 
   // draw anim frame
   uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
   drawFrame(_x, _y + 8, _frame);
 
-  if (arduboy.justPressed(B_BUTTON)) {
-    debug_info_toggle = !debug_info_toggle;
-    arduboy.setFrameRate( debug_info_toggle ? 10 : 30);
-  }
-
   if (debug_info_toggle) 
     drawDebugOverlay();
 };
+
 
 void Player::checkCells() {
   //update cells
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
+  uint8_t f_screen; /// 0..3
 
   //  feet on ground
   cx[0] = (_x - 2) >> 2;
@@ -113,8 +111,10 @@ void Player::checkCells() {
 
   int32_t cell;
   cells = 0;
-  for (int8_t c=0; c<CELL_COUNT; c++) {
-    cell = (field[0][cy[c]] & (0x80000000 >> cx[c])) > 0 ? 1 : 0;
+  for (int8_t c=0; c<CELL_CHECK_COUNT; c++) {
+    f_screen = (cx[c] >> 5) % 2;                    //  (cx / 32) mod 2 = 0..1
+    f_screen = f_screen + (((cy[c] >> 4) % 2) << 1);  // ((cy / 16) mod 2) * 2 = 0..2
+    cell = (field[f_screen][cy[c] % CELL_COUNT_Y] & (0x80000000 >> (cx[c] % CELL_COUNT_X))) > 0 ? 1 : 0;
     cells |= (cell << c);
   }
 }

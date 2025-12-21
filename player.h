@@ -7,8 +7,9 @@
 #include "animations.h"
 
 #include "common.h"
+#include "camera.h"
 
-#define CELL_COUNT 7      // cells for checking collision
+#define CELL_CHECK_COUNT 7      // cells for checking collision
 
 #define AF_DIAG_DOWN  1   // :.
 #define AF_DIAG_UP    2   // .:
@@ -90,7 +91,7 @@ class Player {
 
     Player();
     ~Player();
-    void draw();
+    void draw(Camera camera);
     void drawDebugOverlay();
     void process();
     void processControls();

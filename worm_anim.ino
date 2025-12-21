@@ -6,7 +6,7 @@
 Arduboy2 arduboy;
 Sprites sprites;
 
-//#include "player.h"
+#include "player.h"
 #include "camera.h"
 #include "fixedmath.h"
 
@@ -20,94 +20,94 @@ uint8_t const ground[] PROGMEM = {
 
 uint32_t field[4][CELL_COUNT_Y] = {
   {
-    0xFFFFFFE0,
+    0x0003FFF0,
     0x0000FFC0,
-    0x00003F80,
-    0x00000601,
+    0x00000780,
+    0x00000001,
 
-    0x000C0001,
-    0x003F0003,
-    0x007FE07F,
-    0x00FFE007,
+    0x800C0001,
+    0x803F0003,
+    0xC07FE07F,
+    0xC0FFE007,
 
-    0x01FFF001,
-    0x07FFFC03,
-    0x07F3FE03,
-    0x8FC0FF03,
+    0x81FFF001,
+    0x87FFFC03,
+    0x87FFFE03,
+    0xCFC3FF1F,
 
-    0x9F003FFF,
-    0xFC000FFF,
-    0xF80000FF,
-    0xE0000000
+    0xFF000F8F,
+    0xFC000FC7,
+    0x78001FE1,
+    0x20003FF0
   },
   {
-    ~0xFFFFFFE0,
-    ~0x0000FFC0,
-    ~0x00003F80,
-    ~0x00000601,
-
-    ~0x000C0001,
-    ~0x003F0003,
-    ~0x007FE07F,
-    ~0x00FFE007,
-
-    ~0x01FFF001,
-    ~0x07FFFC03,
-    ~0x07F3FE03,
-    ~0x8FC0FF03,
-
-    ~0x9F003FFF,
-    ~0xFC000FFF,
-    ~0xF80000FF,
-    ~0xE0000000
-  },
-  {
-    ~0xFFFFFFE0,
-    ~0x0000FFC0,
-    ~0x00003F80,
-    ~0x00000601,
-
-    ~0x000C0001,
-    ~0x003F0003,
-    ~0x007FE07F,
-    ~0x00FFE007,
-
-    ~0x01FFF001,
-    ~0x07FFFC03,
-    ~0x07F3FE03,
-    ~0x8FC0FF03,
-
-    ~0x9F003FFF,
-    ~0xFC000FFF,
-    ~0xF80000FF,
-    ~0xE0000000
-  },
-  {
-    0xFFFFFFE0,
+    0x0003FFF0,
     0x0000FFC0,
-    0x00003F80,
-    0x00000601,
+    0x00000780,
+    0x00000001,
 
-    0x000C0001,
-    0x003F0003,
-    0x007FE07F,
-    0x00FFE007,
+    0x800C0001,
+    0x803F0003,
+    0xC07FE07F,
+    0xC0FFE007,
 
-    0x01FFF001,
-    0x07FFFC03,
-    0x07F3FE03,
-    0x8FC0FF03,
+    0x81FFF001,
+    0x87FFFC03,
+    0x87FFFE03,
+    0xCFC3FF1F,
 
-    0x9F003FFF,
-    0xFC000FFF,
-    0xF80000FF,
-    0xE0000000
+    0xFF000F8F,
+    0xFC000FC7,
+    0x78001FE1,
+    0x20003FF0
+  },
+  {
+    0x0003FFF0,
+    0x0000FFC0,
+    0x00000780,
+    0x00000001,
+
+    0x800C0001,
+    0x803F0003,
+    0xC07FE07F,
+    0xC0FFE007,
+
+    0x81FFF001,
+    0x87FFFC03,
+    0x87FFFE03,
+    0xCFC3FF1F,
+
+    0xFF000F8F,
+    0xFC000FC7,
+    0x78001FE1,
+    0x20003FF0
+  },
+  {
+    0x0003FFF0,
+    0x0000FFC0,
+    0x00000780,
+    0x00000001,
+
+    0x800C0001,
+    0x803F0003,
+    0xC07FE07F,
+    0xC0FFE007,
+
+    0x81FFF001,
+    0x87FFFC03,
+    0x87FFFE03,
+    0xCFC3FF1F,
+
+    0xFF000F8F,
+    0xFC000FC7,
+    0x78001FE1,
+    0x20003FF0
   }
 
 };
 
 Camera camera;
-
+Player player;
 
 void debug_stop(int32_t value, const char message[] = NULL) {
   arduboy.fillScreen(0);
@@ -186,15 +186,14 @@ void drawField() {
 }
 
 
-//Player player;
-
 void setup() {
   arduboy.boot();
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-//  player.x = 110 << FBITS;
-//  player.y = 40 << FBITS;
+  player.x = 110 << FBITS;
+  player.y = 40 << FBITS;
+
 }
 
 void loop() {
@@ -206,14 +205,22 @@ void loop() {
   arduboy.fillScreen(WHITE);
   counter++;
 
-  //player.process();
-  camera.processControls();
+  if (arduboy.justPressed(B_BUTTON)) {
+    debug_info_toggle = !debug_info_toggle;
+    arduboy.setFrameRate(debug_info_toggle ? 10 : 30);
+  }
+
+  player.process();
+  player.processAnim();
+
+  camera.focus_x = player.x;
+  camera.focus_y = player.y;
   camera.process();
-  
+
   drawField();
-  camera.drawDebugOverlay();
-  //player.processAnim();
-  //player.draw();
+  if (debug_info_toggle)
+    camera.drawDebugOverlay();
+  player.draw(camera);
 
   arduboy.display();
 
