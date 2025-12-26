@@ -72,8 +72,8 @@ void Player::drawDebugOverlay() {
 
 
 void Player::draw(Camera camera) {
-  uint32_t _x = (x - camera.x) >> FBITS;
-  uint32_t _y = (y - camera.y) >> FBITS;
+  uint32_t _x = (x >> FBITS) - (camera.x >> FBITS);
+  uint32_t _y = (y >> FBITS) - (camera.y >> FBITS);
 
   // draw anim frame
   uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
