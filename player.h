@@ -38,7 +38,7 @@ extern Arduboy2 arduboy;
 extern Sprites sprites;
 extern bool debug_info_toggle;
 
-extern uint32_t field[4][CELL_COUNT_Y];
+extern uint32_t *field_ptr[4];
 
 extern uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value);
 extern void drawFrame(int8_t x, int8_t y, uint8_t frame_id);

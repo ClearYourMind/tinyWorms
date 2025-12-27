@@ -114,7 +114,7 @@ void Player::checkCells() {
   for (int8_t c=0; c<CELL_CHECK_COUNT; c++) {
     f_screen = (cx[c] >> 5) % 2;                    //  (cx / 32) mod 2 = 0..1
     f_screen = f_screen + (((cy[c] >> 4) % 2) << 1);  // ((cy / 16) mod 2) * 2 = 0..2
-    cell = (field[f_screen][cy[c] % CELL_COUNT_Y] & (0x80000000 >> (cx[c] % CELL_COUNT_X))) > 0 ? 1 : 0;
+    cell = (field_ptr[f_screen][cy[c] % CELL_COUNT_Y] & (0x80000000 >> (cx[c] % CELL_COUNT_X))) > 0 ? 1 : 0;
     cells |= (cell << c);
   }
 }
