@@ -1,6 +1,5 @@
 #include "player.h"
 #include "common.h"
-#include "camera.h"
 
 Player::Player() {
   walk_speed = 1 << FBITS;
@@ -17,6 +16,26 @@ Player::~Player() {
   delete [] cx;
   delete [] cy;
 }
+
+
+void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
+  uint8_t count = pgm_read_byte_near(frame_list[frame_id] + 0);
+  uint8_t tile_id;
+  int8_t tile_offset_x;
+  int8_t tile_offset_y;
+  for (uint8_t i=0; i<count; i++) {
+    tile_id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
+    tile_offset_x = pgm_read_byte_near(frame_list[frame_id] + i*3 + 2);
+    tile_offset_y = pgm_read_byte_near(frame_list[frame_id] + i*3 + 3);
+    sprites.drawExternalMask(
+      x + tile_offset_x,
+      y + tile_offset_y,
+      spritesheet_worm, spritesheet_worm_mask,
+      tile_id, tile_id
+    );
+  };
+}
+
 
 void Player::drawDebugOverlay() {
   uint8_t osc = counter % 2;
@@ -114,7 +133,7 @@ void Player::checkCells() {
   for (int8_t c=0; c<CELL_CHECK_COUNT; c++) {
     f_screen = (cx[c] >> 5) % 2;                    //  (cx / 32) mod 2 = 0..1
     f_screen = f_screen + (((cy[c] >> 4) % 2) << 1);  // ((cy / 16) mod 2) * 2 = 0..2
-    cell = (field_ptr[f_screen][cy[c] % CELL_COUNT_Y] & (0x80000000 >> (cx[c] % CELL_COUNT_X))) > 0 ? 1 : 0;
+    cell = getCell(field_ptr[f_screen], cx[c] % CELL_COUNT_X, cy[c] % CELL_COUNT_Y) ? 1 : 0;
     cells |= (cell << c);
   }
 }
