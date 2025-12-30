@@ -9,6 +9,7 @@ Sprites sprites;
 #include "player.h"
 #include "camera.h"
 #include "fixedmath.h"
+#include "terrain_generator.h"
 
 uint16_t counter = 0;
 bool debug_info_toggle = false;
@@ -114,6 +115,8 @@ uint32_t *field_ptr[4] = {
 
 Camera camera;
 Player player;
+TerrainGenerator terrain_gen(42);
+uint16_t screenNo = 0;
 
 void debug_stop(int32_t value, const char message[] = NULL) {
   arduboy.fillScreen(0);
@@ -138,39 +141,28 @@ uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
 }
 
 
-void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
-  uint8_t count = pgm_read_byte_near(frame_list[frame_id] + 0);
-  struct {
-    uint8_t id;
-    int8_t offset_x;
-    int8_t offset_y;
-  } tile;
-  for (uint8_t i=0; i<count; i++) {
-    tile.id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
-    tile.offset_x = pgm_read_byte_near(frame_list[frame_id] + i*3 + 2);
-    tile.offset_y = pgm_read_byte_near(frame_list[frame_id] + i*3 + 3);
-    sprites.drawExternalMask(
-      x + tile.offset_x,
-      y + tile.offset_y,
-      spritesheet_worm, spritesheet_worm_mask,
-      tile.id, tile.id
-    ); 
-  };
+void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value) {
+  if (value)
+      field[y] |= (0x80000000 >> x);
+  else
+      field[y] &= ~(0x80000000 >> x);
+}
+
+bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y) {
+  return (field[y] & (0x80000000 >> x)) != 0;
 }
 
 
 void drawField() {
-  uint8_t yy = 0;
-  uint8_t xx = 0;
+  int8_t yy = 0;
+  int8_t xx = 0;
   uint8_t f_screen;
-  bool to_draw;
 
   for (uint8_t j=camera.cell_y; j<camera.cell_y + CELL_COUNT_Y; j++)
   for (uint8_t i=camera.cell_x; i<camera.cell_x + CELL_COUNT_X; i++) {
     f_screen = (i >> 5) % 2;            //  (cx / 32) mod 2 = 0..1
     f_screen += ((j >> 4) % 2) << 1;    // ((cy / 16) mod 2) * 2 = 0..2
-    to_draw = (field_ptr[f_screen][j % CELL_COUNT_Y] & (0x80000000 >> (i % CELL_COUNT_X))) > 0;
-    if (to_draw) {
+    if (getCell(field_ptr[f_screen], i % CELL_COUNT_X, j % CELL_COUNT_Y)) {
       xx = (i << 2) - (camera.x >> FBITS);
       yy = (j << 2) - (camera.y >> FBITS);
       sprites.drawErase(xx, yy, ground, 0);
@@ -180,19 +172,22 @@ void drawField() {
 
 
 void screenOverlap() {
-    uint32_t *t_ptr;  // using t_ptr and swapping pointers is not nessessary
+  uint32_t *t_ptr;
 
-    t_ptr = field_ptr[0];
-    field_ptr[0] = field_ptr[1];
-    field_ptr[1] = t_ptr;
-    t_ptr = field_ptr[2];
-    field_ptr[2] = field_ptr[3];
-    field_ptr[3] = t_ptr;
+  t_ptr = field_ptr[0];
+  field_ptr[0] = field_ptr[1];
+  field_ptr[1] = t_ptr;
+  t_ptr = field_ptr[2];
+  field_ptr[2] = field_ptr[3];
+  field_ptr[3] = t_ptr;
 
-    camera.x -= (uint16_t)F_WIDTH;
-    player.x -= (uint16_t)F_WIDTH;
+  camera.x -= (uint16_t)F_WIDTH;
+  player.x -= (uint16_t)F_WIDTH;
 
-    // generate terrain for field_ptr[1][3]
+  screenNo++;
+  // generate terrain for field_ptr[1][3]
+  terrain_gen.generateNextScreen(field_ptr[1], field_ptr[0]);
+  terrain_gen.generateNextScreen(field_ptr[3], field_ptr[2]);
 }
 
 
@@ -203,6 +198,11 @@ void setup() {
   arduboy.setFrameRate(30);
   player.x = 110 << FBITS;
   player.y = 40 << FBITS;
+
+  terrain_gen.generateScreen(field[0]);
+  terrain_gen.generateNextScreen(field[1], field[0]);
+  terrain_gen.generateNextScreen(field[2], field[1]);
+  terrain_gen.generateNextScreen(field[3], field[2]);
 
 }
 
@@ -238,5 +238,5 @@ void loop() {
   player.draw(camera);
 
   arduboy.display();
-
+  arduboy.idle();
 }
