@@ -113,10 +113,10 @@ uint32_t *field_ptr[4] = {
   field[3]
 };
 
-Camera camera;
-Player player;
-TerrainGenerator terrain_gen(42);
 uint16_t screenNo = 0;
+Camera camera;
+//Player player;
+TerrainGenerator terrain_gen(42);
 
 void debug_stop(int32_t value, const char message[] = NULL) {
   arduboy.fillScreen(0);
@@ -142,10 +142,11 @@ uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
 
 
 void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value) {
+  if (x >= CELL_COUNT_X || y >= CELL_COUNT_Y) return false;
   if (value)
-      field[y] |= (0x80000000 >> x);
+    field[y] |= (0x80000000 >> x);
   else
-      field[y] &= ~(0x80000000 >> x);
+    field[y] &= ~(0x80000000 >> x);
 }
 
 bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y) {
@@ -153,7 +154,7 @@ bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y) {
 }
 
 
-void drawField() {
+void drawField(Camera camera) {
   int8_t yy = 0;
   int8_t xx = 0;
   uint8_t f_screen;
@@ -182,12 +183,12 @@ void screenOverlap() {
   field_ptr[3] = t_ptr;
 
   camera.x -= (uint16_t)F_WIDTH;
-  player.x -= (uint16_t)F_WIDTH;
+  camera.focus_x -= (uint16_t)F_WIDTH;
+//  player.x -= (uint16_t)F_WIDTH;
 
   screenNo++;
   // generate terrain for field_ptr[1][3]
-  terrain_gen.generateNextScreen(field_ptr[1], field_ptr[0]);
-  terrain_gen.generateNextScreen(field_ptr[3], field_ptr[2]);
+  terrain_gen.generateScreen(field_ptr[1], field_ptr[3], field_ptr[0], field_ptr[2]);
 }
 
 
@@ -196,14 +197,9 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  player.x = 110 << FBITS;
-  player.y = 40 << FBITS;
-
-  terrain_gen.generateScreen(field[0]);
-  terrain_gen.generateNextScreen(field[1], field[0]);
-  terrain_gen.generateNextScreen(field[2], field[1]);
-  terrain_gen.generateNextScreen(field[3], field[2]);
-
+//  player.x = 110 << FBITS;
+//  player.y = 40 << FBITS;
+  camera.focus_x = F_WIDTH-5;
 }
 
 
@@ -225,17 +221,18 @@ void loop() {
   if (camera.x > (uint16_t)F_WIDTH)
     screenOverlap();
 
-  player.process();
-  player.processAnim();
+//  player.process();
+//  player.processAnim();
 
-  camera.focus_x = player.x;
-  camera.focus_y = player.y;
+  //camera.focus_x = player.x;
+  //camera.focus_y = player.y;
+  camera.processControls();
   camera.process();
 
-  drawField();
+  drawField(camera);
   if (debug_info_toggle)
     camera.drawDebugOverlay();
-  player.draw(camera);
+//  player.draw(camera);
 
   arduboy.display();
   arduboy.idle();

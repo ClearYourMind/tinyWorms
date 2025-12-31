@@ -1,6 +1,16 @@
 #include "camera.h"
 #include "common.h"
 
+Camera::Camera() {
+  x = 0;
+  y = 0;
+  cell_x = 0;
+  cell_y = 0;
+  focus_x = 0;
+  focus_y = 0;
+}
+
+
 void Camera::process() {
   int16_t dx; // fixed
   int16_t dy; // fixed
