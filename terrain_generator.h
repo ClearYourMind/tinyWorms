@@ -3,28 +3,27 @@
 
 #include "Arduino.h"
 #include "common.h"
+#include "camera.h"
+
+extern void drawField(Camera camera);
+extern void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value);
+extern bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y);
 
 class TerrainGenerator {
-  private:
-    uint8_t seed;
-    uint8_t last_height[CELL_COUNT_X]; // Высота поверхности в предыдущем столбце
-    
-    // Параметры генерации
-    int8_t min_height = 4;  // Минимальная высота (от верха)
-    int8_t max_height = 12; // Максимальная высота
-    int8_t max_step = 1;    // Максимальный шаг изменения высоты между столбцами
-    
-    // Вспомогательные функции
-    void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value);
-    bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y);
-    void smoothTerrain(uint32_t field[CELL_COUNT_Y]);
-    
   public:
+    uint8_t seed;
+    uint32_t *screen[2];
+    Camera camera;
+
     TerrainGenerator(uint8_t initial_seed = 0);
-    
-    void generateNextScreen(uint32_t new_screen[CELL_COUNT_Y], uint32_t previous_screen[CELL_COUNT_Y]);
-    void generateScreen(uint32_t screen[CELL_COUNT_Y]);
-    void setSeed(uint8_t new_seed);
+
+    void generateLine(uint8_t start_x, uint8_t start_y, uint8_t start_height, int8_t max_length);
+    void generateScreen(
+      uint32_t screen_hi[CELL_COUNT_Y],
+      uint32_t screen_lo[CELL_COUNT_Y],
+      uint32_t prev_screen_hi[CELL_COUNT_Y],
+      uint32_t prev_screen_lo[CELL_COUNT_Y]
+    );
 };
 
 #endif

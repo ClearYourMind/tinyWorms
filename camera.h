@@ -15,14 +15,14 @@ class Camera {
     int32_t y; // fixed point
     int8_t cell_x;
     int8_t cell_y;
-    int8_t screen_x;
-    int8_t screen_y;
     int32_t focus_x; // fixed point
     int32_t focus_y; // fixed point
 
     void process();
     void processControls();
     void drawDebugOverlay();
+
+    Camera();
 };
 
 #endif

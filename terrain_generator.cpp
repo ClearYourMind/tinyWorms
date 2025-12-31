@@ -1,194 +1,109 @@
+#include "Arduino.h"
 #include "terrain_generator.h"
+#include "fixedmath.h"
 
-TerrainGenerator::TerrainGenerator(uint8_t initial_seed) {
+TerrainGenerator::TerrainGenerator(uint8_t initial_seed = 0) {
     seed = initial_seed;
-    // Инициализируем высоты для первого экрана
-    for (uint8_t i = 0; i < CELL_COUNT_X; i++) {
-        last_height[i] = 8; // Средняя высота
-    }
+    //randomSeed(seed);
+   camera = Camera();
+   camera.x = (uint16_t)F_WIDTH;
+   camera.cell_x = CELL_COUNT_X;
 }
 
-void TerrainGenerator::setSeed(uint8_t new_seed) {
-    seed = new_seed;
-    randomSeed(seed);
-}
 
-void TerrainGenerator::generateScreen(uint32_t screen[CELL_COUNT_Y]) {
-    // Начальная генерация - простая холмистая местность
-    int8_t height = 8; // Средняя высота
-    
-    // Очищаем экран
+void TerrainGenerator::generateScreen(
+        uint32_t screen_hi[CELL_COUNT_Y],
+        uint32_t screen_lo[CELL_COUNT_Y],
+        uint32_t prev_screen_hi[CELL_COUNT_Y],
+        uint32_t prev_screen_lo[CELL_COUNT_Y]
+    ) {
+    screen[0] = screen_hi;
+    screen[1] = screen_lo;
+    // get last column and clear screen
     for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
-        screen[y] = 0;
+        screen_hi[y] = (prev_screen_hi[y] & 1) << (CELL_COUNT_X-1);
+        screen_lo[y] = (prev_screen_lo[y] & 1) << (CELL_COUNT_X-1);
     }
-    
-    // Генерируем начальный склон
-    for (uint8_t x = 0; x < CELL_COUNT_X; x++) {
-        // Плавное изменение высоты
-        int8_t height_change = random(-max_step, max_step + 1);
-        height += height_change;
-        
-        // Ограничиваем высоту
-        if (height < min_height) height = min_height;
-        if (height > max_height) height = max_height;
-        
-        last_height[x] = height;
-        
-        // Заполняем столбец от высоты до низа
-        for (uint8_t y = height; y < CELL_COUNT_Y; y++) {
-            setCell(screen, x, y, true);
+    uint8_t height = 0;
+    uint8_t cell_y;         // move screen index calc code into getCell/setCell
+    uint8_t f_screen; // 0..1
+
+    for (uint8_t y = 0; y < CELL_COUNT_Y * 2; y++) {
+        f_screen = y >> 4;    // y / CELL_COUNT_Y // move screen index calc code into getCell/setCell
+        cell_y = y % CELL_COUNT_Y;
+        if (getCell(screen[f_screen], 0, cell_y))
+            height++;
+        else if (height > 0) {
+            generateLine(0, y, height, CELL_COUNT_X >> 1);
+            height = 0;
         }
     }
-    
-    // Сглаживаем
-    smoothTerrain(screen);
+    if (height > 0)
+        generateLine(0, CELL_COUNT_Y * 2 - 1, height, CELL_COUNT_X >> 1);
 }
 
-void TerrainGenerator::generateNextScreen(uint32_t new_screen[CELL_COUNT_Y], uint32_t previous_screen[CELL_COUNT_Y]) {
-    // Очищаем новый экран
-    for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
-        new_screen[y] = 0;
+
+void TerrainGenerator::generateLine(uint8_t start_x, uint8_t start_y, uint8_t start_height, int8_t max_length) {
+    if (max_length < 1 || start_x > CELL_COUNT_X) {
+        // arduboy.fillScreen();
+        // arduboy.setCursor(0, 0);  arduboy.print("line ended");
+        // arduboy.display();
+        // arduboy.waitNoButtons();
+        // while (!arduboy.anyPressed(255));
+        return;
     }
-    
-    // Определяем высоту в последнем столбце предыдущего экрана
-    int8_t last_previous_height = CELL_COUNT_Y - 1;
-    for (int8_t y = CELL_COUNT_Y - 1; y >= 0; y--) {
-        if (getCell(previous_screen, CELL_COUNT_X - 1, y)) {
-            last_previous_height = y;
-            break;
+
+    int8_t up_down = (random(1, CELL_COUNT_Y*2) <= start_y) ? -1: 1;
+    int8_t thick_thin = (random(3, CELL_COUNT_Y) <= start_height) ? -1: 1;
+    int16_t d_height = random(1 << (FBITS-4), 1 << (FBITS-2));
+    int16_t f_height_offset = 0;    // cumulative height change along line
+    int16_t line_y = start_y << FBITS;
+    int8_t start_line_y;
+    int8_t end_line_y;
+    uint8_t length = random(1, max_length);
+    uint8_t cell_y;         // move screen index calc code into getCell/setCell
+    uint8_t f_screen; // 0..1
+
+    for (uint8_t x = start_x; x < start_x + length + 1; x++) {
+        f_height_offset += d_height * thick_thin;
+        line_y = line_y + (up_down << (FBITS-1)); // +0.5 .. -0.5
+        start_line_y = (line_y >> FBITS) - (start_height + (f_height_offset >> FBITS));
+        start_line_y = min(max(start_line_y, 0), CELL_COUNT_Y * 2);
+        end_line_y = (line_y >> FBITS) - (f_height_offset >> FBITS);
+        end_line_y = min(max(end_line_y, 0), CELL_COUNT_Y * 2);
+        if ((end_line_y - start_line_y) < 2) {
+           end_line_y++;
+           break;
         }
+        for (uint8_t y = start_line_y; y < end_line_y; y++) {
+            f_screen = (y >> 4) % 2;    // y / CELL_COUNT_Y // move screen index calc code into getCell/setCell
+            cell_y = y % CELL_COUNT_Y;
+            setCell(screen[f_screen], x, cell_y, true);
+        }
+        arduboy.fillScreen();
+        drawField(camera);
+        arduboy.setCursor(0, 0);  arduboy.print(start_x);
+        arduboy.setCursor(24, 0); arduboy.print(start_y);
+        arduboy.setCursor(48, 0); arduboy.print(start_height);
+        arduboy.setCursor(72, 0); arduboy.print(max_length);
+        arduboy.setCursor(24, 8); arduboy.print(start_line_y);
+        arduboy.setCursor(48, 8); arduboy.print(end_line_y);
+        arduboy.setCursor(72, 8); arduboy.print(length);
+        arduboy.setCursor(0, 16); arduboy.print(up_down);
+        arduboy.setCursor(24,16); arduboy.print(thick_thin);
+
+        arduboy.display();
+        // arduboy.waitNoButtons();
+        // while (!arduboy.anyPressed(255));
     }
-    
-    // Начинаем с этой высоты
-    int8_t current_height = last_previous_height;
-    
-    // Копируем последний столбец предыдущего экрана как первый нового
-    for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
-        if (getCell(previous_screen, CELL_COUNT_X - 1, y)) {
-            setCell(new_screen, 0, y, true);
-        }
-    }
-    last_height[0] = current_height;
-    
-    // Выбираем тип генерации для этого экрана
-    uint8_t terrain_type = random(100);
-    
-    // Генерируем остальные столбцы
-    for (uint8_t x = 1; x < CELL_COUNT_X; x++) {
-        if (terrain_type < 30) { // 30% - плоская местность
-            // Сохраняем высоту
-        }
-        else if (terrain_type < 60) { // 30% - холмы
-            int8_t change = random(-max_step * 2, max_step * 2 + 1);
-            current_height += change;
-        }
-        else if (terrain_type < 80) { // 20% - платформы
-            if (x % 8 == 0) { // Каждые 8 клеток возможность платформы
-                if (random(100) < 40) {
-                    // Создаем платформу
-                    uint8_t platform_length = random(2, 6);
-                    uint8_t platform_height = random(min_height, current_height);
-                    
-                    for (uint8_t px = 0; px < platform_length && (x + px) < CELL_COUNT_X; px++) {
-                        for (uint8_t y = platform_height; y < CELL_COUNT_Y; y++) {
-                            setCell(new_screen, x + px, y, true);
-                        }
-                        last_height[x + px] = platform_height;
-                    }
-                    x += platform_length - 1;
-                    current_height = platform_height;
-                    continue;
-                }
-            }
-            int8_t change = random(-max_step, max_step + 1);
-            current_height += change;
-        }
-        else { // 20% - ступеньки
-            if (x % 4 == 0 && random(100) < 50) {
-                current_height += (random(2) ? 1 : -1) * 2;
-            }
-        }
-        
-        // Ограничиваем высоту
-        if (current_height < min_height) current_height = min_height;
-        if (current_height > max_height) current_height = max_height;
-        
-        // Заполняем столбец
-        for (uint8_t y = current_height; y < CELL_COUNT_Y; y++) {
-            setCell(new_screen, x, y, true);
-        }
-        
-        last_height[x] = current_height;
-    }
-    
-    // Добавляем случайные проходы (пещеры)
-    if (random(100) < 30) {
-        uint8_t cave_start = random(4, CELL_COUNT_X - 8);
-        uint8_t cave_height = random(min_height + 2, max_height - 2);
-        uint8_t cave_width = random(4, 10);
-        
-        for (uint8_t x = cave_start; x < cave_start + cave_width && x < CELL_COUNT_X; x++) {
-            // Создаем проход высотой 2-3 клетки
-            for (uint8_t y = cave_height; y < cave_height + 3 && y < CELL_COUNT_Y; y++) {
-                setCell(new_screen, x, y, false);
-            }
-        }
-    }
-    
-    // Сглаживаем рельеф
-    smoothTerrain(new_screen);
-    
-    // Обновляем seed для следующей генерации
-    seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+    // arduboy.fillScreen();
+    // arduboy.setCursor(0, 0);  arduboy.print(start_x);
+    // arduboy.setCursor(24, 0); arduboy.print(length);
+    // arduboy.setCursor(48, 0); arduboy.print(start_x + length);
+    // arduboy.setCursor(48, 8); arduboy.print(CELL_COUNT_X - (start_x + length));
+    // arduboy.display();
+    // arduboy.waitNoButtons();
+    // while (!arduboy.anyPressed(255));
+    generateLine(start_x + length, end_line_y, end_line_y-start_line_y, (CELL_COUNT_X - (start_x + length)) >> 1);
 }
 
-void TerrainGenerator::setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value) {
-    if (x >= CELL_COUNT_X || y >= CELL_COUNT_Y) return;
-    
-    if (value) {
-        field[y] |= (0x80000000 >> x);
-    } else {
-        field[y] &= ~(0x80000000 >> x);
-    }
-}
-
-bool TerrainGenerator::getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y) {
-    if (x >= CELL_COUNT_X || y >= CELL_COUNT_Y) return false;
-    return (field[y] & (0x80000000 >> x)) != 0;
-}
-
-void TerrainGenerator::smoothTerrain(uint32_t field[CELL_COUNT_Y]) {
-    uint32_t smoothed[CELL_COUNT_Y];
-    
-    // Копируем поле
-    for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
-        smoothed[y] = field[y];
-    }
-    
-    // Сглаживаем - заполняем одиночные отверстия
-    for (uint8_t x = 1; x < CELL_COUNT_X - 1; x++) {
-        for (uint8_t y = 0; y < CELL_COUNT_Y - 1; y++) {
-            // Если клетка пустая, но сверху и снизу есть земля
-            if (!getCell(field, x, y) && 
-                getCell(field, x, y-1) && 
-                getCell(field, x, y+1)) {
-                // Заполняем дыру
-                setCell(smoothed, x, y, true);
-            }
-            
-            // Если клетка с землей, но сверху и снизу пусто
-            if (getCell(field, x, y) && 
-                !getCell(field, x, y-1) && 
-                !getCell(field, x, y+1) &&
-                y > 0 && y < CELL_COUNT_Y - 1) {
-                // Убираем одинокий столбик
-                setCell(smoothed, x, y, false);
-            }
-        }
-    }
-    
-    // Копируем обратно
-    for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
-        field[y] = smoothed[y];
-    }
-}
