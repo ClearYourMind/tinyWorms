@@ -4,10 +4,10 @@
 
 TerrainGenerator::TerrainGenerator(uint8_t initial_seed = 0) {
     seed = initial_seed;
-    //randomSeed(seed);
-   camera = Camera();
-   camera.x = (uint16_t)F_WIDTH;
-   camera.cell_x = CELL_COUNT_X;
+    randomSeed(seed);
+    camera = Camera();
+    camera.x = (uint16_t)F_WIDTH;
+    camera.cell_x = CELL_COUNT_X;
 }
 
 
@@ -53,7 +53,7 @@ void TerrainGenerator::generateLine(uint8_t start_x, uint8_t start_y, uint8_t st
         return;
     }
 
-    int8_t up_down = (random(1, CELL_COUNT_Y*2) <= start_y) ? -1: 1;
+    int8_t up_down = (random(8, CELL_COUNT_Y*2) <= start_y) ? -1: 1;
     int8_t thick_thin = (random(3, CELL_COUNT_Y) <= start_height) ? -1: 1;
     int16_t d_height = random(1 << (FBITS-4), 1 << (FBITS-2));
     int16_t f_height_offset = 0;    // cumulative height change along line
@@ -80,19 +80,19 @@ void TerrainGenerator::generateLine(uint8_t start_x, uint8_t start_y, uint8_t st
             cell_y = y % CELL_COUNT_Y;
             setCell(screen[f_screen], x, cell_y, true);
         }
-        arduboy.fillScreen();
-        drawField(camera);
-        arduboy.setCursor(0, 0);  arduboy.print(start_x);
-        arduboy.setCursor(24, 0); arduboy.print(start_y);
-        arduboy.setCursor(48, 0); arduboy.print(start_height);
-        arduboy.setCursor(72, 0); arduboy.print(max_length);
-        arduboy.setCursor(24, 8); arduboy.print(start_line_y);
-        arduboy.setCursor(48, 8); arduboy.print(end_line_y);
-        arduboy.setCursor(72, 8); arduboy.print(length);
-        arduboy.setCursor(0, 16); arduboy.print(up_down);
-        arduboy.setCursor(24,16); arduboy.print(thick_thin);
+        // arduboy.fillScreen();
+        // drawField(camera);
+        // arduboy.setCursor(0, 0);  arduboy.print(start_x);
+        // arduboy.setCursor(24, 0); arduboy.print(start_y);
+        // arduboy.setCursor(48, 0); arduboy.print(start_height);
+        // arduboy.setCursor(72, 0); arduboy.print(max_length);
+        // arduboy.setCursor(24, 8); arduboy.print(start_line_y);
+        // arduboy.setCursor(48, 8); arduboy.print(end_line_y);
+        // arduboy.setCursor(72, 8); arduboy.print(length);
+        // arduboy.setCursor(0, 16); arduboy.print(up_down);
+        // arduboy.setCursor(24,16); arduboy.print(thick_thin);
 
-        arduboy.display();
+        // arduboy.display();
         // arduboy.waitNoButtons();
         // while (!arduboy.anyPressed(255));
     }
