@@ -107,7 +107,6 @@ void Player::checkCells() {
   //update cells
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
-  uint8_t f_screen; /// 0..3
 
   //  feet on ground
   cx[0] = (_x - 2) >> 2;
@@ -131,10 +130,8 @@ void Player::checkCells() {
   int32_t cell;
   cells = 0;
   for (uint8_t c=0; c<CELL_CHECK_COUNT; c++)
-  if (cy[c] > 0) {
-    f_screen = (cx[c] >> 5) % 2;                    //  (cx / 32) mod 2 = 0..1
-    f_screen = f_screen + (((cy[c] >> 4) % 2) << 1);  // ((cy / 16) mod 2) * 2 = 0..2
-    cell = getCell(field_ptr[f_screen], cx[c] % CELL_COUNT_X, cy[c] % CELL_COUNT_Y) ? 1 : 0;
+  if (cy[c] >= 0) {
+    cell = getCell(field_ptr, cx[c], cy[c]) ? 1 : 0;
     cells |= (cell << c);
   }
 }
