@@ -6,17 +6,18 @@
 #include "camera.h"
 
 extern void drawField(Camera camera);
-extern void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value);
-extern bool getCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y);
+extern void setCell(uint32_t *field[], uint8_t x, uint8_t y, bool value);
+extern bool getCell(uint32_t *field[], uint8_t x, uint8_t y);
 
 class TerrainGenerator {
   public:
     uint8_t seed;
-    uint32_t *screen[2];
+    uint32_t *screen[4];
     Camera camera;
 
     TerrainGenerator(uint8_t initial_seed = 0);
 
+    void generateBranch(uint8_t start_x, uint8_t start_y, uint8_t start_height, int8_t up_down, int8_t x_step = 0);
     void generateLine(uint8_t start_x, uint8_t start_y, uint8_t start_height, int8_t max_length);
     void generateScreen(
       uint32_t screen_hi[CELL_COUNT_Y],
