@@ -5,9 +5,6 @@
 TerrainGenerator::TerrainGenerator(uint8_t initial_seed = 0) {
     seed = initial_seed;
     randomSeed(seed);
-    camera = Camera();
-    camera.x = (uint16_t)F_WIDTH;
-    camera.cell_x = CELL_COUNT_X;
 }
 
 
@@ -72,23 +69,7 @@ void TerrainGenerator::generateLine(
            break;
         }
         for (uint8_t y = start_line_y; y < end_line_y; y++)
-            setCell(screen, x, y, true); //(end_line_y + start_line_y) >> 1, true);
-
-        arduboy.fillScreen();
-        drawField(camera);
-        arduboy.setCursor(0, 0);  arduboy.print(start_x);
-        arduboy.setCursor(24, 0); arduboy.print(start_y);
-        arduboy.setCursor(48, 0); arduboy.print(start_height);
-        arduboy.setCursor(72, 0); arduboy.print(max_length);
-        arduboy.setCursor(24, 8); arduboy.print(start_line_y);
-        arduboy.setCursor(48, 8); arduboy.print(end_line_y);
-        arduboy.setCursor(72, 8); arduboy.print(length);
-        arduboy.setCursor(0, 16); arduboy.print(up_down);
-        arduboy.setCursor(24,16); arduboy.print(thick_thin);
-
-        arduboy.display();
-        // arduboy.waitNoButtons();
-        // while (!arduboy.anyPressed(255));
+            setCell(screen, x, y, true);
     }
     // generate branch
     bool branch = (random(1, CELL_COUNT_X >> 1) <= length);
@@ -116,12 +97,6 @@ void TerrainGenerator::generateBranch(uint8_t start_x, uint8_t start_y, uint8_t 
     if (x_step == 0)
         x_step = (random(1, 100) <= 50) ? 1: -1;
 
-    arduboy.setCursor(48, 48);  arduboy.print("doing branch!");
-    arduboy.display();
-    // arduboy.waitNoButtons();
-    // while (!arduboy.anyPressed(255));
-
-    int8_t x = 0;
     bool branch;
     for (int8_t x = start_x; (x < CELL_COUNT_X) & (x >= 0); x += x_step) {
         f_height_offset += d_height; // always getting thinner
@@ -130,11 +105,6 @@ void TerrainGenerator::generateBranch(uint8_t start_x, uint8_t start_y, uint8_t 
         start_line_y = min(max(start_line_y, 0), CELL_COUNT_Y * 2);
         end_line_y = (line_y - f_height_offset) >> FBITS;
         end_line_y = min(max(end_line_y, 0), CELL_COUNT_Y * 2);
-        drawField(camera);
-        arduboy.setCursor(0, 0);  arduboy.print(x);
-        arduboy.setCursor(24, 0); arduboy.print(start_line_y);
-        arduboy.setCursor(48, 0); arduboy.print(end_line_y);
-        arduboy.display();
         if ((end_line_y - start_line_y) < 1)
             break;
         for (uint8_t y = start_line_y; y < end_line_y; y++)
@@ -145,8 +115,4 @@ void TerrainGenerator::generateBranch(uint8_t start_x, uint8_t start_y, uint8_t 
             generateBranch(x, end_line_y, end_line_y - start_line_y, up_down, -x_step);
 
     }
-    // arduboy.setCursor(48, 48);  arduboy.print("branch end!");
-    // arduboy.display();
-    // arduboy.waitNoButtons();
-    // while (!arduboy.anyPressed(255));
 }

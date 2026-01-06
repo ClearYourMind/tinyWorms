@@ -13,7 +13,6 @@ class TerrainGenerator {
   public:
     uint8_t seed;
     uint32_t *screen[4];
-    Camera camera;
 
     TerrainGenerator(uint8_t initial_seed = 0);
 
