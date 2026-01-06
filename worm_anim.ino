@@ -115,7 +115,7 @@ uint32_t *field_ptr[4] = {
 
 uint16_t screenNo = 0;
 Camera camera;
-//Player player;
+Player player;
 TerrainGenerator terrain_gen(42);
 
 void debug_stop(int32_t value, const char message[] = NULL) {
@@ -192,7 +192,7 @@ void screenOverlap() {
 
   camera.x -= (uint16_t)F_WIDTH;
   camera.focus_x -= (uint16_t)F_WIDTH;
-  //player.x -= (uint16_t)F_WIDTH;
+  player.x -= (uint16_t)F_WIDTH;
 
   screenNo++;
   // generate terrain for field_ptr[1][3]
@@ -205,9 +205,8 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-//  player.x = 110 << FBITS;
-//  player.y = 40 << FBITS;
-  camera.focus_x = F_WIDTH-5;
+  player.x = 110 << FBITS;
+  player.y = 40 << FBITS;
 }
 
 
@@ -229,18 +228,18 @@ void loop() {
   if (camera.x > (uint16_t)F_WIDTH)
     screenOverlap();
 
-  // player.process();
-  // player.processAnim();
+  player.process();
+  player.processAnim();
 
-  // camera.focus_x = player.x;
-  // camera.focus_y = player.y;
+  camera.focus_x = player.x;
+  camera.focus_y = player.y;
   camera.processControls();
   camera.process();
 
   drawField(camera);
   if (debug_info_toggle)
     camera.drawDebugOverlay();
-//  player.draw(camera);
+  player.draw(camera);
 
   arduboy.display();
   arduboy.idle();
