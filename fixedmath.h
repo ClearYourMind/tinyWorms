@@ -23,7 +23,7 @@ const uint8_t scTab[SCPREC + 1] PROGMEM = {
   0, 50, 98, 142, 180, 212, 236, 250, 255
 };
 
-inline void getSinCos(uint8_t sec, int32_t *s, int32_t *c) {   // a - angle. must be + and <=360
+inline void getSinCos(uint8_t sec, int16_t *s, int16_t *c) {   // a - angle. must be + and <=360
   uint8_t q = sec >> SCPREC_LOG2;
 
   switch (q) {

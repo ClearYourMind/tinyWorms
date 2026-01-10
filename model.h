@@ -7,33 +7,52 @@
 
 extern Arduboy2 arduboy;
 
-struct Matrix {
-  int16_t sin;
-  int16_t cos;
-  int16_t scale;
-  // int32_t x;  // original position on scene
-  // int32_t y;
-  // int32_t tx; // position on screen
-  // int32_t ty;
-  uint8_t angle_sec;
-};
+// struct Matrix {
+//   int16_t sin;
+//   int16_t cos;
+//   //int16_t scale;
+//   // int32_t x;  // original position on scene
+//   // int32_t y;
+//   //int32_t tx; // position on screen
+//   //int32_t ty;
+//   //uint8_t angle_sec;
+// };
 
 class Model {
+  private:
+    int16_t _sin;
+    int16_t _cos;
+    uint8_t _angle;
+    int16_t _scale;
+    int16_t _tx;
+    int16_t _ty;
+    void transform_vertex(int16_t vx, int16_t vy, int16_t *x, int16_t *y);  // use pointer in param ?
   public:
     int16_t* f_vertex_x;
     int16_t* f_vertex_y;
     uint8_t vertex_count;
-    // mx matrix;
+    //Matrix matrix;
     // uint8_t center_x;
     // uint8_t center_y;
     int32_t x;
     int32_t y;
 
-    void transform(Matrix m);
-    void drawFill(Camera camera, uint8_t color=WHITE);
-    void drawOutline(Camera camera, uint8_t color=BLACK);
-    Model(int32_t _x, int32_t _y, uint8_t* model, uint8_t _vertex_count);
+//    void transform();
+    void drawFill(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE);
+    void drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+    Model(uint8_t* model, uint8_t _vertex_count);
     ~Model();
 };
+
+//   int32_t _s, _c;
+  
+//   getSinCos(angle_sec, &_s, &_c);
+//   matrix.sin = fmul(_s, scale);
+//   matrix.cos = fmul(_c, scale);
+//   // m->m_tx = fmul(m->m_x - cam.x, cam.scale) + (cam.cx<<FBITS);
+//   // m->m_ty = fmul(m->m_y - cam.y, cam.scale) + (cam.cy<<FBITS);
+
+//   return matrix;
+// };
 
 #endif
