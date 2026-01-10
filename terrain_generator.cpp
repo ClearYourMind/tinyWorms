@@ -1,0 +1,118 @@
+#include "Arduino.h"
+#include "terrain_generator.h"
+#include "fixedmath.h"
+
+TerrainGenerator::TerrainGenerator(uint8_t initial_seed = 0) {
+    seed = initial_seed;
+    randomSeed(seed);
+}
+
+
+void TerrainGenerator::generateScreen(
+        uint32_t screen_hi[CELL_COUNT_Y],
+        uint32_t screen_lo[CELL_COUNT_Y],
+        uint32_t prev_screen_hi[CELL_COUNT_Y],
+        uint32_t prev_screen_lo[CELL_COUNT_Y]
+    ) {
+    screen[0] = screen_hi;
+    screen[1] = NULL;
+    screen[2] = screen_lo;
+    screen[3] = NULL;
+
+    // get last column and clear screen
+    for (uint8_t y = 0; y < CELL_COUNT_Y; y++) {
+        screen_hi[y] = (prev_screen_hi[y] & 1) << (CELL_COUNT_X-1);
+        screen_lo[y] = (prev_screen_lo[y] & 1) << (CELL_COUNT_X-1);
+    }
+    
+    uint8_t height = 0;
+    for (uint8_t y = 0; y < CELL_COUNT_Y * 2; y++) {
+        if (getCell(screen, 0, y))
+            height++;
+        else if (height > 0) {
+            generateLine(0, y, height, CELL_COUNT_X >> 1);
+            height = 0;
+        }
+    }
+    if (height > 0)
+        generateLine(0, CELL_COUNT_Y * 2 - 1, height, CELL_COUNT_X >> 1);
+}
+
+
+void TerrainGenerator::generateLine(
+        uint8_t start_x,
+        uint8_t start_y,
+        uint8_t start_height,
+        int8_t max_length
+    ) {
+    if (max_length < 1 || start_x > CELL_COUNT_X)
+            return;
+
+    int8_t up_down = (random(CELL_COUNT_Y, CELL_COUNT_Y*2) <= start_y) ? -1: 1;
+    int8_t thick_thin = (random(3, CELL_COUNT_Y) <= start_height) ? -1: 1;
+    int16_t d_height = random(1 << (FBITS-4), 1 << (FBITS-2));
+    int16_t f_height_offset = 0;    // cumulative height change along line
+    int16_t line_y = start_y << FBITS;
+    int8_t start_line_y;
+    int8_t end_line_y;
+    uint8_t length = random(1, max_length);
+
+    for (int8_t x = start_x; x < start_x + length + 1; x++) {
+        f_height_offset += d_height * thick_thin;
+        line_y = line_y + (up_down << (FBITS-1)); // +0.5 .. -0.5
+        start_line_y = (line_y - ((start_height << FBITS) + f_height_offset)) >> FBITS;
+        start_line_y = min(max(start_line_y, 0), CELL_COUNT_Y * 2);
+        end_line_y = (line_y + f_height_offset) >> FBITS;
+        end_line_y = min(max(end_line_y, 0), CELL_COUNT_Y * 2);
+        if ((end_line_y - start_line_y) < 2) {
+           end_line_y++;
+           break;
+        }
+        for (uint8_t y = start_line_y; y < end_line_y; y++)
+            setCell(screen, x, y, true);
+    }
+    // generate branch
+    bool branch = (random(1, CELL_COUNT_X >> 1) <= length);
+    if (branch)
+        generateBranch(start_x + length, end_line_y, end_line_y - start_line_y, up_down);
+
+    // generate main line
+    generateLine(
+        start_x + length,
+        end_line_y,
+        end_line_y - start_line_y,
+        (CELL_COUNT_X - (start_x + length)) >> 1
+    );
+}
+
+void TerrainGenerator::generateBranch(uint8_t start_x, uint8_t start_y, uint8_t start_height, int8_t up_down, int8_t x_step = 0) {
+    if (start_height < 1 || start_x > CELL_COUNT_X)
+        return;
+
+    int16_t d_height = random(1 << (FBITS-1), 1 << (FBITS));
+    int16_t f_height_offset = 0;    // cumulative height change along line
+    int16_t line_y = start_y << FBITS;
+    int8_t start_line_y;
+    int8_t end_line_y;
+    if (x_step == 0)
+        x_step = (random(1, 100) <= 50) ? 1: -1;
+
+    bool branch;
+    for (int8_t x = start_x; (x < CELL_COUNT_X) & (x >= 0); x += x_step) {
+        f_height_offset += d_height; // always getting thinner
+        line_y = line_y + (up_down << FBITS);
+        start_line_y = (line_y - ((start_height << FBITS) - f_height_offset)) >> FBITS;
+        start_line_y = min(max(start_line_y, 0), CELL_COUNT_Y * 2);
+        end_line_y = (line_y - f_height_offset) >> FBITS;
+        end_line_y = min(max(end_line_y, 0), CELL_COUNT_Y * 2);
+        if ((end_line_y - start_line_y) < 1)
+            break;
+        for (uint8_t y = start_line_y; y < end_line_y; y++)
+            setCell(screen, x, y, true);
+        // generate secondary branch
+        branch = (random(1, 100) <= 25);
+        if (branch)
+            generateBranch(x, end_line_y, end_line_y - start_line_y, up_down, -x_step);
+
+    }
+}

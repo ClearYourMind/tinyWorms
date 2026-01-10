@@ -42,6 +42,9 @@ extern uint32_t *field_ptr[4];
 
 extern uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value);
 extern void drawFrame(int8_t x, int8_t y, uint8_t frame_id);
+extern void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool value);
+extern bool getCell(uint32_t *field[], uint8_t x, uint8_t y);
+
 
 // anim set based on anim_flags
 uint8_t* const anim_stand_set[] = {
