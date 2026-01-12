@@ -18,6 +18,26 @@ Player::~Player() {
   delete [] cy;
 }
 
+
+void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
+  uint8_t count = pgm_read_byte_near(frame_list[frame_id] + 0);
+  uint8_t tile_id;
+  int8_t tile_offset_x;
+  int8_t tile_offset_y;
+  for (uint8_t i=0; i<count; i++) {
+    tile_id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
+    tile_offset_x = pgm_read_byte_near(frame_list[frame_id] + i*3 + 2);
+    tile_offset_y = pgm_read_byte_near(frame_list[frame_id] + i*3 + 3);
+    sprites.drawExternalMask(
+      x + tile_offset_x,
+      y + tile_offset_y,
+      spritesheet_worm, spritesheet_worm_mask,
+      tile_id, tile_id
+    );
+  };
+}
+
+
 void Player::drawDebugOverlay() {
   uint8_t osc = counter % 2;
 

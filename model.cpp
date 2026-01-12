@@ -82,7 +82,7 @@ void Model::drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, 
   transform_vertex(f_vertex_x[0], f_vertex_y[0], &_x0, &_y0);
   transform_vertex(f_vertex_x[vertex_count-1], f_vertex_y[vertex_count-1], &_xn, &_yn);
 
-  for (uint8_t init_i = 2; init_i < 4; init_i++) {
+  for (uint8_t init_i = 1; init_i < 3; init_i++) {
     _x1 = _x0;
     _y1 = _y0;
     for (uint8_t i = init_i; i < vertex_count - 1; i+=2) {
@@ -91,7 +91,12 @@ void Model::drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, 
 
       _x1 = _x2;
       _y1 = _y2;
+      // arduboy.setCursor(0,0); arduboy.print(i);
+      // arduboy.display();
+      // arduboy.waitNoButtons();
+      // while (!arduboy.anyPressed(255));
     }
     arduboy.drawLine(_x1, _y1, _xn, _yn, color);
+
   }
 }

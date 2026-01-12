@@ -9,6 +9,7 @@ Sprites sprites;
 #include "fixedmath.h"
 #include "models.h"
 #include "model_tester.h"
+#include "player.h"
 
 uint16_t counter = 0;
 bool debug_info_toggle = false;
@@ -43,7 +44,7 @@ void setup() {
   arduboy.setFrameRate(30);
 
   tester.add_model(wormBase, 23);
-  tester.add_model(wormBase, 23);
+  tester.add_model(w_pistol, 8);
 }
 
 
@@ -70,6 +71,10 @@ void loop() {
   }
   camera.process();
 
+  arduboy.fillScreen(tester.clear_color);
+  for (uint8_t i=0; i<tester.model_count; i++)
+    drawFrame((tester.model_x[i] >> FBITS) - (camera.x >> FBITS), (tester.focus_y >> FBITS) - (camera.y >> FBITS), 0);
+  
   tester.draw(camera);
 
   if (debug_info_toggle)

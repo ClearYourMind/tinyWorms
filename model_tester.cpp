@@ -7,7 +7,6 @@ ModelTester::ModelTester() {
   models = new Model* [MAXMODELS];
   model_count = 0;
   focused_model_no = 0;
-  button_timer = 0;
   drawing_mode = 0;
   for (uint8_t i=0; i<MAXMODELS; i++)
     model_x[i] = (i * 48 + 48) << FBITS;
@@ -26,15 +25,13 @@ ModelTester::~ModelTester() {
 }
 
 
-bool ModelTester::time_passed(uint8_t time_in_frames) {
-  int8_t d_time;
+bool ModelTester::frames_passed(uint8_t time_in_frames) {
+  static uint16_t last_counter;
+  uint16_t d_time;
 
-  if (counter < button_timer)
-    d_time = (0xFFFF - button_timer) + counter;
-  else
-    d_time = counter - button_timer;
+  d_time = counter - last_counter;
 
-  button_timer = counter;
+  last_counter = counter;
   return (d_time >= time_in_frames);
 }
 
@@ -57,7 +54,7 @@ void ModelTester::process() {
   if (arduboy.pressed(A_BUTTON)) {
     control_captured = true;
     if (arduboy.justPressed(A_BUTTON)) {
-      if (time_passed(8))
+      if (frames_passed(8))
         focused_model_no = (focused_model_no + 1) % model_count;
       else    // A + A
         drawing_mode = (drawing_mode + 1) % 4;
@@ -81,7 +78,6 @@ void ModelTester::process() {
 
 
 void ModelTester::draw(Camera camera) {
-  arduboy.fillScreen(clear_color);
 
   for (uint8_t i = 0; i < model_count; i++) {
     switch (drawing_mode) {
