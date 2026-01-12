@@ -62,11 +62,13 @@ void loop() {
   }
 
   tester.process();
-  camera.focus_x = tester.focus_x;
-  camera.focus_y = tester.focus_y;
-
   if (!tester.control_captured)
-    camera.process();
+    camera.processControls();
+  else {
+    camera.focus_x = tester.focus_x;
+    camera.focus_y = tester.focus_y;
+  }
+  camera.process();
 
   tester.draw(camera);
 

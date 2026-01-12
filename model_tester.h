@@ -9,6 +9,7 @@
 #define MAXMODELS 8
 
 extern Arduboy2 arduboy;
+extern uint16_t counter;
 
 
 class ModelTester {
@@ -18,9 +19,11 @@ class ModelTester {
     uint8_t clear_color = WHITE;
     Model** models;
     int32_t model_x[MAXMODELS];
-    //int32_t model_y[MAXMODELS];
     uint8_t model_count;
     uint8_t focused_model_no;
+    uint16_t button_timer;
+    int8_t drawing_mode;
+    bool time_passed(uint8_t time_in_frames);
   public:
     int16_t focus_x;
     int16_t focus_y;
