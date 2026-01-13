@@ -8,6 +8,7 @@ ModelTester::ModelTester() {
   model_count = 0;
   focused_model_no = 0;
   drawing_mode = 0;
+  background_mode = 0;    // 0..1 - b/w only; 2..3 - b/w + sprite
   for (uint8_t i=0; i<MAXMODELS; i++)
     model_x[i] = (i * 48 + 48) << FBITS;
 
@@ -60,7 +61,7 @@ void ModelTester::process() {
         drawing_mode = (drawing_mode + 1) % 4;
     }
     if (arduboy.justPressed(B_BUTTON))
-      clear_color = (clear_color + 1) % 2;
+      background_mode = (background_mode + 1) % 4;
 
     focus_x = model_x[focused_model_no];
     if (arduboy.justPressed(LEFT_BUTTON))
@@ -78,11 +79,26 @@ void ModelTester::process() {
 
 
 void ModelTester::draw(Camera camera) {
+  // background
+  uint8_t origin_color = counter % 2;
+  int8_t origin_x;
+  int8_t origin_y = (focus_y >> FBITS) - (camera.y >> FBITS);
 
+  arduboy.fillScreen(background_mode % 2);
+
+  if ((background_mode >> 1) % 2) {
+    for (uint8_t i=0; i<model_count; i++) {
+      origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS);
+      drawFrame(origin_x, origin_y, 0);
+    }
+  }
+
+  // model
   for (uint8_t i = 0; i < model_count; i++) {
+    origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS);
     switch (drawing_mode) {
       case 0:
-        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale);
+        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale); // coords could be 8bit origin_x/y and no camera passed
         models[i]->drawOutline(model_x[i], focus_y, camera, angle, scale);
         break;
       case 1:
@@ -96,5 +112,10 @@ void ModelTester::draw(Camera camera) {
         models[i]->drawFill(model_x[i], focus_y, camera, angle, scale, BLACK);
         break;
     }
+    // draw origin coord
+    arduboy.drawPixel(origin_x - 1, origin_y, origin_color);
+    arduboy.drawPixel(origin_x + 1, origin_y, origin_color);
+    arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
+    arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
   }
 }

@@ -5,6 +5,8 @@
 #include "fixedmath.h"
 #include "camera.h"
 #include "model.h"
+#include "player.h"
+
 
 #define MAXMODELS 8
 
@@ -26,7 +28,7 @@ class ModelTester {
     uint8_t model_count;
     int32_t model_x[MAXMODELS];
     bool control_captured;
-    uint8_t clear_color = WHITE;
+    uint8_t background_mode;
 
     ModelTester();
     ~ModelTester();
