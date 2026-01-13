@@ -98,18 +98,18 @@ void ModelTester::draw(Camera camera) {
     origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS);
     switch (drawing_mode) {
       case 0:
-        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale); // coords could be 8bit origin_x/y and no camera passed
-        models[i]->drawOutline(model_x[i], focus_y, camera, angle, scale);
+        models[i]->drawFill(origin_x, origin_y, angle, scale);
+        models[i]->drawOutline(origin_x, origin_y, angle, scale);
         break;
       case 1:
-        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale);
+        models[i]->drawFill(origin_x, origin_y, angle, scale);
         break;
       case 2:
-        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale, BLACK);
-        models[i]->drawOutline(model_x[i], focus_y, camera, angle, scale, WHITE);
+        models[i]->drawFill(origin_x, origin_y, angle, scale, BLACK);
+        models[i]->drawOutline(origin_x, origin_y, angle, scale, WHITE);
         break;
       case 3:
-        models[i]->drawFill(model_x[i], focus_y, camera, angle, scale, BLACK);
+        models[i]->drawFill(origin_x, origin_y, angle, scale, BLACK);
         break;
     }
     // draw origin coord
@@ -118,4 +118,8 @@ void ModelTester::draw(Camera camera) {
     arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
     arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
   }
+
+  arduboy.setCursor(0, 0); arduboy.print("scale:");arduboy.print(scale);
+  arduboy.setCursor(0, 8); arduboy.print("angle:");arduboy.print(angle);
+  
 }

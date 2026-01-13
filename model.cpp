@@ -34,15 +34,14 @@ void Model::transform_vertex(int16_t vx, int16_t vy, int16_t *x, int16_t *y) {
 }
 
 
-void Model::drawFill(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE) {
+void Model::drawFill(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE) {
   // check if center is off screen
-  if ((x - camera.x < 0) || (x - camera.x > (uint16_t)F_WIDTH)) return;
-  if ((y - camera.y < 0) || (y - camera.y > (uint16_t)F_HEIGHT)) return;
+  if ((x < 0) || (y < 0)) return;
 
   _angle = angle_sec;
   _scale = scale;
-  _tx = (x >> FBITS) - (camera.x >> FBITS);
-  _ty = (y >> FBITS) - (camera.y >> FBITS);
+  _tx = x;
+  _ty = y;
   getSinCos(_angle, &_sin, &_cos);
   _sin = fmul(_sin, _scale);
   _cos = fmul(_cos, _scale);
@@ -64,15 +63,14 @@ void Model::drawFill(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int
 }
 
 
-void Model::drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK) {
+void Model::drawOutline(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK) {
   // check if center is off screen
-  if ((x - camera.x < 0) || (x - camera.x > (uint16_t)F_WIDTH)) return;
-  if ((y - camera.y < 0) || (y - camera.y > (uint16_t)F_HEIGHT)) return;
+  if ((x < 0) || (y < 0)) return;
 
   _angle = angle_sec;
   _scale = scale;
-  _tx = (x >> FBITS) - (camera.x >> FBITS);
-  _ty = (y >> FBITS) - (camera.y >> FBITS);
+  _tx = x;
+  _ty = y;
   getSinCos(_angle, &_sin, &_cos);
   _sin = fmul(_sin, _scale);
   _cos = fmul(_cos, _scale);
@@ -91,10 +89,6 @@ void Model::drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, 
 
       _x1 = _x2;
       _y1 = _y2;
-      // arduboy.setCursor(0,0); arduboy.print(i);
-      // arduboy.display();
-      // arduboy.waitNoButtons();
-      // while (!arduboy.anyPressed(255));
     }
     arduboy.drawLine(_x1, _y1, _xn, _yn, color);
 
