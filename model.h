@@ -29,6 +29,8 @@ class Model {
 //    void transform();
     void drawFill(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE);
     void drawOutline(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+    void drawDots(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+
     Model(uint8_t* model, uint8_t _vertex_count);
     ~Model();
 };

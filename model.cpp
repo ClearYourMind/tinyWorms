@@ -94,3 +94,24 @@ void Model::drawOutline(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, ui
 
   }
 }
+
+
+void Model::drawDots(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK) {
+  // check if center is off screen
+  if ((x < 0) || (y < 0)) return;
+
+  _angle = angle_sec;
+  _scale = scale;
+  _tx = x;
+  _ty = y;
+  getSinCos(_angle, &_sin, &_cos);
+  _sin = fmul(_sin, _scale);
+  _cos = fmul(_cos, _scale);
+
+  int16_t _x, _y;
+
+  for (uint8_t i = 0; i < vertex_count; i++) {
+    transform_vertex(f_vertex_x[i], f_vertex_y[i], &_x, &_y);
+    arduboy.drawPixel(_x, _y, color);
+  }
+}

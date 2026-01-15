@@ -1,5 +1,3 @@
-#include "Arduboy2.h"
-#include "Arduboy2Core.h"
 #include "model_tester.h"
 
 ModelTester::ModelTester() {
@@ -7,13 +5,13 @@ ModelTester::ModelTester() {
   models = new Model* [MAXMODELS];
   model_count = 0;
   focused_model_no = 0;
-  drawing_mode = 0;
+  drawing_mode = 4;
   background_mode = 0;    // 0..1 - b/w only; 2..3 - b/w + sprite
   for (uint8_t i=0; i<MAXMODELS; i++)
     model_x[i] = (i * 48 + 48) << FBITS;
 
   focus_x = model_x[0];
-  focus_y = 48 << FBITS;
+  focus_y = 32 << FBITS;
 }
 
 
@@ -58,7 +56,7 @@ void ModelTester::process() {
       if (frames_passed(8))
         focused_model_no = (focused_model_no + 1) % model_count;
       else    // A + A
-        drawing_mode = (drawing_mode + 1) % 4;
+        drawing_mode = (drawing_mode + 1) % 5;
     }
     if (arduboy.justPressed(B_BUTTON))
       background_mode = (background_mode + 1) % 4;
@@ -111,12 +109,18 @@ void ModelTester::draw(Camera camera) {
       case 3:
         models[i]->drawFill(origin_x, origin_y, angle, scale, BLACK);
         break;
+      case 4:
+        arduboy.drawRect(origin_x-1, origin_y-1, 18, 18, 1 - origin_color);
+        models[i]->drawDots(origin_x, origin_y, angle, scale, WHITE); //counter % 2);
+        break;
     }
     // draw origin coord
-    arduboy.drawPixel(origin_x - 1, origin_y, origin_color);
-    arduboy.drawPixel(origin_x + 1, origin_y, origin_color);
-    arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
-    arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
+    //if (drawing_mode != 4) {
+      arduboy.drawPixel(origin_x - 1, origin_y, origin_color);
+      arduboy.drawPixel(origin_x + 1, origin_y, origin_color);
+      arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
+      arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
+    //}
   }
 
   arduboy.setCursor(0, 0); arduboy.print("scale:");arduboy.print(scale);
