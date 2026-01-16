@@ -18,23 +18,26 @@ bool debug_info_toggle = false;
 Camera camera;
 ModelTester tester;
 
-void debug_stop(int32_t value, const char message[] = NULL) {
+void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
   arduboy.fillScreen(0);
   arduboy.setTextColor(WHITE);
-  arduboy.setCursor(32, 8);
+  arduboy.setCursor(32, 0);
   arduboy.print("DEBUG STOP");
 
-  arduboy.setCursor(32, 24);
+  arduboy.setCursor(32, 16);
   arduboy.print(message);
-  arduboy.setCursor(48, 32);
-  arduboy.print(value);
-
+  arduboy.setCursor(32, 40);
+  arduboy.print(val_1);
+  arduboy.setCursor(80, 40);
+  arduboy.print(val_2);
   arduboy.display();
   arduboy.waitNoButtons();
   while (!arduboy.anyPressed(255));
 
 }
-
+void debug_stop(int32_t value, const char message[] = NULL) {
+  debug_stop(value, 0, message);
+}
 
 
 void setup() {
@@ -45,6 +48,9 @@ void setup() {
 
   tester.add_model(test_grid, 64);
   tester.add_model(w_pistol, 8);
+
+  debug_stop(F_WIDTH, F_HEIGHT, "W & H");
+  debug_stop(F_WIDTH_H, F_HEIGHT_H, "Half W & H");
 }
 
 

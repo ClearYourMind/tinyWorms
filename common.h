@@ -1,8 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define F_WIDTH (WIDTH << FBITS)
-#define F_HEIGHT (HEIGHT << FBITS)
+#define F_WIDTH ((uint16_t)(WIDTH << FBITS))
+#define F_HEIGHT ((uint16_t)(HEIGHT << FBITS))
 #define F_WIDTH_H (F_WIDTH >> 1)
 #define F_HEIGHT_H (F_HEIGHT >> 1)
 
