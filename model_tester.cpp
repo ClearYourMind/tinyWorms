@@ -67,9 +67,9 @@ void ModelTester::process() {
     if (arduboy.justPressed(RIGHT_BUTTON))
       angle = (angle + 1) % MAXANGLESEC;
     if (arduboy.justPressed(UP_BUTTON))
-      scale += (1 << (FBITS-4));
+      scale += 1;
     if (arduboy.justPressed(DOWN_BUTTON))
-      scale -= (1 << (FBITS-4));
+      scale -= 1;
 
   } else
     control_captured = false;
