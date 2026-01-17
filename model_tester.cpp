@@ -77,11 +77,11 @@ void ModelTester::process() {
 
 
 void ModelTester::draw(Camera camera) {
-  // background
   uint8_t origin_color = counter % 2;
   int8_t origin_x;
   int8_t origin_y = (focus_y >> FBITS) - (camera.y >> FBITS);
 
+  // background
   arduboy.fillScreen(background_mode % 2);
 
   if ((background_mode >> 1) % 2) {

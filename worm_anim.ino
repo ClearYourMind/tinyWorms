@@ -42,6 +42,7 @@ void debug_stop(int32_t value, const char message[] = NULL) {
   debug_stop(value, 0, message);
 }
 
+
 uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
   return bool_value ? (flags | flag) : (flags & ~((uint8_t)flag));
 }
@@ -59,6 +60,7 @@ void setCell(uint32_t *field[], uint8_t x, uint8_t y, bool value) {
   else
     _field[y] &= ~(0x80000000 >> x);
 }
+
 
 bool getCell(uint32_t *field[], uint8_t x, uint8_t y) {
   uint8_t f_screen; /// 0..3
