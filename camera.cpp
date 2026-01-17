@@ -14,9 +14,10 @@ Camera::Camera() {
 void Camera::process() {
   int16_t dx; // fixed
   int16_t dy; // fixed
-  int16_t target_y = min(max(focus_y, F_HEIGHT_H) - F_HEIGHT_H, F_HEIGHT);
+  int16_t target_x = max(focus_x - F_WIDTH_H, 0);
+  int16_t target_y = min(max(focus_y - F_HEIGHT_H, 0), F_HEIGHT);
 
-  dx = ((max(focus_x, -F_WIDTH_H) + F_WIDTH_H) - x) >> 4; // fraction of x and focus_x difference
+  dx = (target_x - x) >> 4; // fraction of x and focus_x difference
   dy = (target_y - y) >> 4;
 
   x += dx;

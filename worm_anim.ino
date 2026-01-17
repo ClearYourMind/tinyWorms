@@ -1,145 +1,46 @@
 #include "Arduboy2.h"
 
-#include "animations.h"
 #include "common.h"
 
 Arduboy2 arduboy;
 Sprites sprites;
 
-#include "player.h"
 #include "camera.h"
 #include "fixedmath.h"
-<<<<<<< HEAD
 #include "model.h"
 #include "models.h"
-=======
 #include "terrain_generator.h"
->>>>>>> generator
+#include "player.h"
 
 uint16_t counter = 0;
 bool debug_info_toggle = false;
-
-uint8_t const ground[] PROGMEM = {
-  7, 8,
-  0x1C, 0x3E, 0x7F, 0x7F, 0x7F, 0x3E, 0x1C
-};
-
-uint32_t field[4][CELL_COUNT_Y] = {
-  {
-    0x0003FFF0,
-    0x0000FFC0,
-    0x00000780,
-    0x00000001,
-
-    0x800C0001,
-    0x803B0003,
-    0xC073E07F,
-    0xC0FBE007,
-
-    0x81FBF001,
-    0x87F1FC03,
-    0x87FFFE03,
-    0xCFC3FF1F,
-
-    0xFF000F8F,
-    0xFC000FC7,
-    0x78001FE1,
-    0x20003FF0
-  },
-  {
-    0x0003FFF0,
-    0x0000FFC0,
-    0x00000780,
-    0x00000001,
-
-    0x800E0001,
-    0x80310003,
-    0xC07DE07F,
-    0xC0FBE007,
-
-    0x81F7F001,
-    0x87F1FC03,
-    0x87FFFE03,
-    0xCFC3FF1F,
-
-    0xFF000F8F,
-    0xFC000FC7,
-    0x78001FE1,
-    0x20003FF0
-  },
-  {
-    0x0003FFF0,
-    0x0000FFC0,
-    0x00000780,
-    0x00000001,
-
-    0x800C0001,
-    0x80330003,
-    0xC079E07F,
-    0xC0F3E007,
-
-    0x81F9F001,
-    0x87F3FC03,
-    0x87FFFE03,
-    0xCFC3FF1F,
-
-    0xFF000F8F,
-    0xFC000FC7,
-    0x78001FE1,
-    0x20003FF0
-  },
-  {
-    0x0003FFF0,
-    0x0000FFC0,
-    0x00000780,
-    0x00000001,
-
-    0x800C0001,
-    0x80330003,
-    0xC06BE07F,
-    0xC0EBE007,
-
-    0x81E1F001,
-    0x87FBFC03,
-    0x87FFFE03,
-    0xCFC3FF1F,
-
-    0xFF000F8F,
-    0xFC000FC7,
-    0x78001FE1,
-    0x20003FF0
-  }
-};
-
-uint32_t *field_ptr[4] = {
-  field[0],
-  field[1],
-  field[2],
-  field[3]
-};
 
 uint16_t screenNo = 0;
 Camera camera;
 Player player;
 TerrainGenerator terrain_gen(42);
 
-void debug_stop(int32_t value, const char message[] = NULL) {
+void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
   arduboy.fillScreen(0);
   arduboy.setTextColor(WHITE);
-  arduboy.setCursor(32, 8);
+  arduboy.setCursor(32, 0);
   arduboy.print("DEBUG STOP");
 
-  arduboy.setCursor(32, 24);
+  arduboy.setCursor(32, 16);
   arduboy.print(message);
-  arduboy.setCursor(48, 32);
-  arduboy.print(value);
-
+  arduboy.setCursor(32, 40);
+  arduboy.print(val_1);
+  arduboy.setCursor(80, 40);
+  arduboy.print(val_2);
   arduboy.display();
   arduboy.waitNoButtons();
   while (!arduboy.anyPressed(255));
 
 }
 
+void debug_stop(int32_t value, const char message[] = NULL) {
+  debug_stop(value, 0, message);
+}
 
 uint8_t setFlagAsBool(uint8_t flags, uint8_t flag, bool bool_value) {
   return bool_value ? (flags | flag) : (flags & ~((uint8_t)flag));
@@ -195,9 +96,9 @@ void screenOverlap() {
   field_ptr[2] = field_ptr[3];
   field_ptr[3] = t_ptr;
 
-  camera.x -= (uint16_t)F_WIDTH;
-  camera.focus_x -= (uint16_t)F_WIDTH;
-  player.x -= (uint16_t)F_WIDTH;
+  camera.x -= F_WIDTH;
+  camera.focus_x -= F_WIDTH;
+  player.x -= F_WIDTH;
 
   screenNo++;
   // generate terrain for field_ptr[1][3]
@@ -221,7 +122,6 @@ void loop() {
 
   arduboy.pollButtons();
 
-  arduboy.fillScreen(WHITE);
   counter++;
 
   if (arduboy.justPressed(B_BUTTON)) {
@@ -230,7 +130,7 @@ void loop() {
   }
 
   // check overscroll
-  if (camera.x > (uint16_t)F_WIDTH)
+  if (camera.x > F_WIDTH)
     screenOverlap();
 
   player.process();
@@ -238,13 +138,11 @@ void loop() {
 
   camera.focus_x = player.x;
   camera.focus_y = player.y;
-  camera.processControls();
   camera.process();
 
   drawField(camera);
   if (debug_info_toggle)
     camera.drawDebugOverlay();
-  player.draw(camera);
 
   arduboy.display();
   arduboy.idle();

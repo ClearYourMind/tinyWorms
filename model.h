@@ -7,17 +7,6 @@
 
 extern Arduboy2 arduboy;
 
-// struct Matrix {
-//   int16_t sin;
-//   int16_t cos;
-//   //int16_t scale;
-//   // int32_t x;  // original position on scene
-//   // int32_t y;
-//   //int32_t tx; // position on screen
-//   //int32_t ty;
-//   //uint8_t angle_sec;
-// };
-
 class Model {
   private:
     int16_t _sin;
@@ -38,21 +27,12 @@ class Model {
     int32_t y;
 
 //    void transform();
-    void drawFill(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE);
-    void drawOutline(int32_t x, int32_t y, Camera camera, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+    void drawFill(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=WHITE);
+    void drawOutline(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+    void drawDots(int8_t x, int8_t y, uint8_t angle_sec, int16_t scale, uint8_t color=BLACK);
+
     Model(uint8_t* model, uint8_t _vertex_count);
     ~Model();
 };
-
-//   int32_t _s, _c;
-  
-//   getSinCos(angle_sec, &_s, &_c);
-//   matrix.sin = fmul(_s, scale);
-//   matrix.cos = fmul(_c, scale);
-//   // m->m_tx = fmul(m->m_x - cam.x, cam.scale) + (cam.cx<<FBITS);
-//   // m->m_ty = fmul(m->m_y - cam.y, cam.scale) + (cam.cy<<FBITS);
-
-//   return matrix;
-// };
 
 #endif
