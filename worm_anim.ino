@@ -48,9 +48,6 @@ void setup() {
 
   tester.add_model(test_grid, 64);
   tester.add_model(w_pistol, 8);
-
-  debug_stop(F_WIDTH, F_HEIGHT, "W & H");
-  debug_stop(F_WIDTH_H, F_HEIGHT_H, "Half W & H");
 }
 
 

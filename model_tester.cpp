@@ -1,3 +1,4 @@
+#include "Arduboy2Core.h"
 #include "model_tester.h"
 
 ModelTester::ModelTester() {
@@ -38,7 +39,8 @@ bool ModelTester::frames_passed(uint8_t time_in_frames) {
 void ModelTester::add_model(uint8_t* _model_arr, uint8_t vertex_count) {
   if (model_count < MAXMODELS) {
     models[model_count] = new Model(_model_arr, vertex_count);
-    model_count++ ;
+    models[model_count]->transform(0, 1 << FBITS);
+    model_count++;
   }
 }
 
@@ -70,6 +72,9 @@ void ModelTester::process() {
       scale += 1;
     if (arduboy.justPressed(DOWN_BUTTON))
       scale -= 1;
+    if (arduboy.anyPressed(LEFT_BUTTON | RIGHT_BUTTON | UP_BUTTON | DOWN_BUTTON))
+    for (uint8_t i=0; i<model_count; i++)
+      models[i]->transform(angle, scale);
 
   } else
     control_captured = false;
@@ -96,31 +101,29 @@ void ModelTester::draw(Camera camera) {
     origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS);
     switch (drawing_mode) {
       case 0:
-        models[i]->drawFill(origin_x, origin_y, angle, scale);
-        models[i]->drawOutline(origin_x, origin_y, angle, scale);
+        models[i]->drawFill(origin_x, origin_y);
+        models[i]->drawOutline(origin_x, origin_y);
         break;
       case 1:
-        models[i]->drawFill(origin_x, origin_y, angle, scale);
+        models[i]->drawFill(origin_x, origin_y);
         break;
       case 2:
-        models[i]->drawFill(origin_x, origin_y, angle, scale, BLACK);
-        models[i]->drawOutline(origin_x, origin_y, angle, scale, WHITE);
+        models[i]->drawFill(origin_x, origin_y, BLACK);
+        models[i]->drawOutline(origin_x, origin_y, WHITE);
         break;
       case 3:
-        models[i]->drawFill(origin_x, origin_y, angle, scale, BLACK);
+        models[i]->drawFill(origin_x, origin_y, BLACK);
         break;
       case 4:
         arduboy.drawRect(origin_x-1, origin_y-1, 18, 18, 1 - origin_color);
-        models[i]->drawDots(origin_x, origin_y, angle, scale, WHITE); //counter % 2);
+        models[i]->drawDots(origin_x, origin_y, WHITE);
         break;
     }
     // draw origin coord
-    //if (drawing_mode != 4) {
-      arduboy.drawPixel(origin_x - 1, origin_y, origin_color);
-      arduboy.drawPixel(origin_x + 1, origin_y, origin_color);
-      arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
-      arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
-    //}
+    arduboy.drawPixel(origin_x - 1, origin_y, origin_color);
+    arduboy.drawPixel(origin_x + 1, origin_y, origin_color);
+    arduboy.drawPixel(origin_x, origin_y - 1, origin_color);
+    arduboy.drawPixel(origin_x, origin_y + 1, origin_color);
   }
 
   arduboy.setCursor(0, 0); arduboy.print("scale:");arduboy.print(scale);
