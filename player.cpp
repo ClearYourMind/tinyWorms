@@ -2,31 +2,26 @@
 #include "common.h"
 
 Player::Player() {
-  walk_speed = 1 << FBITS;
-  jump_speed_y = 5 << (FBITS-1);  // 2.5
-  jump_speed_x = 3 << (FBITS-1);  // 1.5
-  cx = new int8_t[CELL_CHECK_COUNT];
-  cy = new int8_t[CELL_CHECK_COUNT];
   dir = 1;
   can_move = false;
   want_jump = false;
 }
 
 Player::~Player() {
-  delete [] cx;
-  delete [] cy;
+
 }
 
 
 void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
-  uint8_t count = pgm_read_byte_near(frame_list[frame_id] + 0);
+  uint8_t* frame_ptr = frame_list[frame_id];
+  uint8_t tile_count = pgm_read_byte_near(frame_ptr++);
   uint8_t tile_id;
   int8_t tile_offset_x;
   int8_t tile_offset_y;
-  for (uint8_t i=0; i<count; i++) {
-    tile_id = pgm_read_byte_near(frame_list[frame_id] + i*3 + 1);
-    tile_offset_x = pgm_read_byte_near(frame_list[frame_id] + i*3 + 2);
-    tile_offset_y = pgm_read_byte_near(frame_list[frame_id] + i*3 + 3);
+  for (uint8_t i=0; i<tile_count; i++) {
+    tile_id = pgm_read_byte_near(frame_ptr++);
+    tile_offset_x = pgm_read_byte_near(frame_ptr++);
+    tile_offset_y = pgm_read_byte_near(frame_ptr++);
     sprites.drawExternalMask(
       x + tile_offset_x,
       y + tile_offset_y,
@@ -39,9 +34,6 @@ void drawFrame(int8_t x, int8_t y, uint8_t frame_id) {
 
 void Player::drawDebugOverlay() {
   uint8_t osc = counter % 2;
-
-  uint8_t c = (counter >> 1) % CELL_CHECK_COUNT;
-  arduboy.drawRect(cx[c] << 2, cy[c] << 2, 7, 7, osc);
 
   arduboy.setCursor(0, 24);
   arduboy.print(cells & 1);
@@ -104,6 +96,8 @@ void Player::draw(Camera camera) {
 
 
 void Player::checkCells() {
+  static int8_t* cx[CELL_CHECK_COUNT];
+  static int8_t* cy[CELL_CHECK_COUNT];
   //update cells
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
@@ -252,10 +246,10 @@ void Player::processControls() {
           if ((cells & 0x40) > 0) // if head cell hit
             return;   // prevent from moving
           else
-            y -= walk_speed;
+            y -= WALKSPEED;
         if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
-          y += walk_speed;
-        x -= walk_speed;
+          y += WALKSPEED;
+        x -= WALKSPEED;
         switchAnim(AN_WALK);
       } else
         switchAnim(AN_STAND);
@@ -268,10 +262,10 @@ void Player::processControls() {
           if ((cells & 0x40) > 0) // if head cell hit
             return;   // prevent from moving
           else
-            y -= walk_speed;
+            y -= WALKSPEED;
         if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
-          y += walk_speed;
-        x += walk_speed;
+          y += WALKSPEED;
+        x += WALKSPEED;
         switchAnim(AN_WALK);
       } else
         switchAnim(AN_STAND);
@@ -292,8 +286,8 @@ void Player::processControls() {
         };
       };
       if (jump) {
-        dy = -jump_speed_y;
-        dx = jump_speed_x * dir;
+        dy = JUMPSPEED_Y;
+        dx = JUMPSPEED_X * dir;
         switchAnim(AN_JUMP);
       };
     };

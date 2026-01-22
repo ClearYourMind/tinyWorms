@@ -32,6 +32,9 @@
 #define AN_FALL   4
 #define AN_LAND   5
 
+#define JUMPSPEED_Y (-((int16_t)(5 << (FBITS-1))))  // 2.5
+#define JUMPSPEED_X (3 << (FBITS-1))  // 1.5
+#define WALKSPEED (1 << FBITS)
 
 extern uint16_t counter;
 extern Arduboy2 arduboy;
@@ -75,15 +78,11 @@ class Player {
     bool want_shoot;   // use when canMove=false but shoot button pressed to shoot anyway later
     int8_t dir; // -1 .. 1
 
-    int32_t x;
-    int32_t y;
-    int32_t dx;
-    int32_t dy;
-    int32_t walk_speed;
-    int32_t jump_speed_y;
-    int32_t jump_speed_x;
-    int8_t* cx;
-    int8_t* cy;
+    int16_t x;
+    int16_t y;
+    int16_t dx;
+    int16_t dy;
+    int16_t walk_speed;
     uint8_t cells;  // binary set of flags
     uint8_t command_flags;
     uint8_t frame;
