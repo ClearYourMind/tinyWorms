@@ -1,4 +1,6 @@
 build/
 *.png
 *.gz
+startup.sh
+*.bundle
 
