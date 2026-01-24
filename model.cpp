@@ -1,4 +1,3 @@
-#include "pins_arduino.h"
 #include "model.h"
 
 Model::Model(uint8_t* _model, uint8_t _vertex_count) {
@@ -36,8 +35,9 @@ void Model::transform(uint8_t angle_sec, int16_t scale) {
 
   uint8_t _v;
   int16_t vx, vy;
+  uint8_t* model_ptr = model;
   for (uint8_t i = 0; i < vertex_count; i++) {
-    _v = pgm_read_byte(model + i + 1);
+    _v = pgm_read_byte(++model_ptr);
     vx = (_v >> 4) - center_x;
     vy = (_v & 0x0F) - center_y;
     f_vertex_x[i] = (fmul(vx, _c) - fmul(vy, _s)) >> FBITS;

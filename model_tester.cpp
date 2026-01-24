@@ -6,8 +6,8 @@ ModelTester::ModelTester() {
   models = new Model* [MAXMODELS];
   model_count = 0;
   focused_model_no = 0;
-  drawing_mode = 4;
-  background_mode = 0;    // 0..1 - b/w only; 2..3 - b/w + sprite
+  drawing_mode = 0;
+  background_mode = 3;    // 0..1 - b/w only; 2..3 - b/w + sprite
   for (uint8_t i=0; i<MAXMODELS; i++)
     model_x[i] = (i * 48 + 48) << FBITS;
 
@@ -73,8 +73,8 @@ void ModelTester::process() {
     if (arduboy.justPressed(DOWN_BUTTON))
       scale -= 1;
     if (arduboy.anyPressed(LEFT_BUTTON | RIGHT_BUTTON | UP_BUTTON | DOWN_BUTTON))
-    for (uint8_t i=0; i<model_count; i++)
-      models[i]->transform(angle, scale);
+      for (uint8_t i=0; i<model_count; i++)
+        models[i]->transform(angle, scale);
 
   } else
     control_captured = false;
@@ -97,8 +97,9 @@ void ModelTester::draw(Camera camera) {
   }
 
   // model
+  origin_y += 2;
   for (uint8_t i = 0; i < model_count; i++) {
-    origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS);
+    origin_x = (model_x[i] >> FBITS) - (camera.x >> FBITS) + 5;
     switch (drawing_mode) {
       case 0:
         models[i]->drawFill(origin_x, origin_y);
