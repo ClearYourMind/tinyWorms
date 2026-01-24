@@ -46,7 +46,6 @@ void setup() {
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
 
-  tester.add_model(test_grid, 64);
   tester.add_model(w_pistol, 8);
 }
 

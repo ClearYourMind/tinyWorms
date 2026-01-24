@@ -1,4 +1,3 @@
-#include "pins_arduino.h"
 #include "model.h"
 
 Model::Model(uint8_t* _model, uint8_t _vertex_count) {
