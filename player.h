@@ -76,6 +76,7 @@ class Player {
     bool can_move;     // disable controls during some animations (land, recover, jump, fall, hurt..)
     bool want_jump;    // use when canMove=false but jump button pressed to jump anyway later
     bool want_shoot;   // use when canMove=false but shoot button pressed to shoot anyway later
+    bool is_aiming;
     int8_t dir; // -1 .. 1
 
     int16_t x;
