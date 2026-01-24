@@ -27,11 +27,11 @@ Model::~Model() {
 }
 
 
-void Model::transform(uint8_t angle_sec, int16_t scale) {
+void Model::transform(uint8_t angle_sec, int16_t scale_x, int16_t scale_y) {
   int16_t _s, _c;
   getSinCos(angle_sec, &_s, &_c);
-  _s = _s * scale;
-  _c = _c * scale;
+  _s = _s << FBITS;
+  _c = _c << FBITS;
 
   uint8_t _v;
   int16_t vx, vy;
@@ -40,9 +40,16 @@ void Model::transform(uint8_t angle_sec, int16_t scale) {
     _v = pgm_read_byte(++model_ptr);
     vx = (_v >> 4) - center_x;
     vy = (_v & 0x0F) - center_y;
+    vx =  fmul(vx, scale_x);
+    vy =  fmul(vy, scale_y);
     f_vertex_x[i] = (fmul(vx, _c) - fmul(vy, _s)) >> FBITS;
     f_vertex_y[i] = (fmul(vx, _s) + fmul(vy, _c)) >> FBITS;
   }
+}
+
+
+void Model::transform(uint8_t angle_sec, int16_t scale) {
+    transform(angle_sec, scale, scale);
 }
 
 
