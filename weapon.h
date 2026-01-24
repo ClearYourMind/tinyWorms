@@ -10,11 +10,13 @@ class Weapon {
   public:
     Model* model;
     uint8_t angle;
+    int16_t scale;
 
-    void draw(int8_t x, int8_t y, int8_t dir);
+    void draw(int8_t x, int8_t y);
     void show();
     void hide();
-    void update(uint8_t angle, int8_t dir);
+    void shoot();
+    void update(int8_t dir);
 
     Weapon(Model* _model);
     ~Weapon();

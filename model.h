@@ -20,6 +20,7 @@ class Model {
     int32_t x;
     int32_t y;
 
+    void transform(uint8_t angle_sec, int16_t scale_x, int16_t scale_y);
     void transform(uint8_t angle_sec, int16_t scale);
     void drawFill(int8_t x, int8_t y, uint8_t color=WHITE);
     void drawOutline(int8_t x, int8_t y, uint8_t color=BLACK);
