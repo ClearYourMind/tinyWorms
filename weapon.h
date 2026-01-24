@@ -1,9 +1,6 @@
 #ifndef WEAPON_H
 #define WEAPON_H
 
-#include "player.h"
-#include "camera.h"
-#include "models.h"
 #include "model.h"
 
 class Weapon {
@@ -11,6 +8,7 @@ class Weapon {
     Model* model;
     uint8_t angle;
     int16_t scale;
+    bool shown;
 
     void draw(int8_t x, int8_t y);
     void show();

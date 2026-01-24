@@ -117,8 +117,11 @@ uint32_t *field_ptr[4] = {
 
 uint16_t screenNo = 0;
 Camera camera;
-Player player;
 TerrainGenerator terrain_gen(42);
+
+Model* model_pistol;
+
+Player player;
 
 
 void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
@@ -214,8 +217,12 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
+  
+  model_pistol = new Model(w_pistol, 8);
+
   player.x = 110 << FBITS;
   player.y = 40 << FBITS;
+  player.weapon = new Weapon(model_pistol);
 }
 
 

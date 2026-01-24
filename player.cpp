@@ -1,5 +1,6 @@
 #include "player.h"
 #include "common.h"
+#include "models.h"
 
 Player::Player() {
   dir = 1;
@@ -8,7 +9,7 @@ Player::Player() {
 }
 
 Player::~Player() {
-
+  delete weapon;
 }
 
 
@@ -89,6 +90,8 @@ void Player::draw(Camera camera) {
   // draw anim frame
   uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
   drawFrame(_x, _y + 8, _frame);
+
+  weapon->draw(_x+5, _y+10);
 
   if (debug_info_toggle) 
     drawDebugOverlay();
