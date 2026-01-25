@@ -90,7 +90,7 @@ void Player::draw(Camera camera) {
   uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
   drawFrame(_x, _y + 8, _frame);
 
-  weapons.draw(weapon, _x + 5, _y + 10);
+  weapons.draw(weapon, _x, _y);
 
   if (debug_info_toggle) 
     drawDebugOverlay();
@@ -162,6 +162,8 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
   // these switch statements can be replaced with 2D array
   switch (_anim_action) {
     case AN_STAND:
+      weapon.dir = dir;
+      weapons.update(weapon);
       weapons.show(weapon);
       anim = anim_stand_set[anim_flags];
       break;
@@ -277,6 +279,7 @@ void Player::processControls() {
       } else
         switchAnim(AN_STAND);
     };
+
     if ((command_flags & CF_JUMP) || want_jump) {
       if (!can_move) {
         want_jump = true;
