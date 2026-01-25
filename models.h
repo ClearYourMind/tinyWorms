@@ -1,6 +1,8 @@
 #ifndef MODELS_H
 #define MODELS_H
 
+#include "avr/pgmspace.h"
+
 const PROGMEM uint8_t wormBase[] = {
   0xAF,
   0x1F, 0x0E, 0x2F, 0x0D, 0x3D,

@@ -8,7 +8,6 @@
 
 #include "common.h"
 #include "camera.h"
-#include "model.h"
 #include "weapon.h"
 
 #define CELL_CHECK_COUNT 7      // cells for checking collision
@@ -51,7 +50,7 @@ extern void setCell(uint32_t field[CELL_COUNT_Y], uint8_t x, uint8_t y, bool val
 extern bool getCell(uint32_t *field[], uint8_t x, uint8_t y);
 extern void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL);
 
-extern Model* model_pistol;
+extern WeaponSystem weapons;
 
 // anim set based on anim_flags
 uint8_t* const anim_stand_set[] = {
@@ -96,7 +95,7 @@ class Player {
     uint8_t* anim; // array
 
     bool is_aiming;
-    Weapon* weapon;
+    WeaponState weapon;
 
     Player();
     ~Player();

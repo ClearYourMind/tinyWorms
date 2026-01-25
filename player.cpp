@@ -1,6 +1,5 @@
 #include "player.h"
 #include "common.h"
-#include "models.h"
 
 Player::Player() {
   dir = 1;
@@ -9,7 +8,7 @@ Player::Player() {
 }
 
 Player::~Player() {
-  delete weapon;
+  delete weapon.model;
 }
 
 
@@ -91,7 +90,7 @@ void Player::draw(Camera camera) {
   uint8_t _frame = pgm_read_byte_near(anim + frame + 1);
   drawFrame(_x, _y + 8, _frame);
 
-  weapon->draw(_x+5, _y+10);
+  weapons.draw(weapon, _x + 5, _y + 10);
 
   if (debug_info_toggle) 
     drawDebugOverlay();
@@ -163,12 +162,15 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
   // these switch statements can be replaced with 2D array
   switch (_anim_action) {
     case AN_STAND:
+      weapons.show(weapon);
       anim = anim_stand_set[anim_flags];
       break;
     case AN_WALK:
+      weapons.hide(weapon);
       anim = anim_walk_set[anim_flags];
       break;
     case AN_LAND:
+      weapons.hide(weapon);
       frame = 0;
       anim_ended = false;
       can_move = false;
@@ -178,6 +180,7 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
         anim = anim_jumpland_r;
       break;
     case AN_JUMP:
+      weapons.hide(weapon);
       frame = 0;
       anim_ended = false;
       can_move = false;
@@ -187,6 +190,7 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
         anim = anim_jumpstart_r;
       break;
     case AN_FALL:
+      weapons.hide(weapon);
       if (dir == -1)
         anim = anim_jump_l;
       else

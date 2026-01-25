@@ -1,37 +1,47 @@
 #include "weapon.h"
 #include "fixedmath.h"
 
-Weapon::Weapon(Model* _model) {
-  model = _model;
-  shown = false;
+
+void WeaponSystem::draw(WeaponState& state, int8_t x, int8_t y) {
+  if (!state.shown) return;
+
+  state.model->drawFill(x, y);
+  state.model->drawOutline(x, y);
 }
 
 
-Weapon::~Weapon() {
+void WeaponSystem::show(WeaponState& state) {
+  if (state.shown) return;
+  state.shown = true;
+}
+
+
+void WeaponSystem::hide(WeaponState& state) {
+  if (!state.shown) return;
+  state.shown = false;
+}
+
+
+void WeaponSystem::shoot(WeaponState& state) {
 
 }
 
 
-void Weapon::show() {
-  // appearing animation
-  shown = true;
+void WeaponSystem::update(WeaponState& state, int8_t dir) {
 
 }
 
 
-void Weapon::hide() {
-  // hiding animation
-  shown = false;
-
-}
-
-
-void Weapon::update(int8_t dir) {
-  model->transform(angle, (1 << FBITS) * dir, 1 << FBITS);
-}
-
-
-void Weapon::draw(int8_t x, int8_t y) {
-  model->drawFill(x, y);
-  model->drawOutline(x, y);
+WeaponState WeaponSystem::newWeapon(WeaponType type) {
+  return {
+    .model = new Model(
+      weapon_list[type].model_arr,
+      weapon_list[type].vertex_count
+    ),
+    .type = type,
+    .angle = 0,
+    .scale = 1 << FBITS,
+    .anim_state = 0,
+    .shown = false
+  };
 }

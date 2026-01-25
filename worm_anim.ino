@@ -11,6 +11,7 @@ Sprites sprites;
 #include "models.h"
 #include "terrain_generator.h"
 #include "player.h"
+#include "weapon.h"
 
 uint16_t counter = 0;
 bool debug_info_toggle = false;
@@ -119,9 +120,8 @@ uint16_t screenNo = 0;
 Camera camera;
 TerrainGenerator terrain_gen(42);
 
-Model* model_pistol;
-
 Player player;
+WeaponSystem weapons;
 
 
 void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
@@ -218,11 +218,9 @@ void setup() {
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
   
-  model_pistol = new Model(w_pistol, 8);
-
   player.x = 110 << FBITS;
   player.y = 40 << FBITS;
-  player.weapon = new Weapon(model_pistol);
+  player.weapon = weapons.newWeapon(WEAPON_PISTOL);
 }
 
 
