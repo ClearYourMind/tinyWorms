@@ -73,6 +73,9 @@ uint8_t* const anim_walk_set[] = {
 };
 
 class Player {
+  private:
+    static char* switch_anim_str;
+    static char* process_anim_str;
   public:
     bool landed;
     bool o_landed;
@@ -104,6 +107,7 @@ class Player {
     void process();
     void processControls();
     void processAnim();
+    uint8_t updateAnimFlags();
     void switchAnim(uint8_t _anim_action, bool forced = false);
     void checkCells();
     void commandFromKeys();

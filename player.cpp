@@ -1,6 +1,10 @@
 #include "player.h"
 #include "common.h"
 
+char* Player::switch_anim_str;
+char* Player::process_anim_str;
+
+
 Player::Player() {
   dir = 1;
   can_move = false;
@@ -69,6 +73,10 @@ void Player::drawDebugOverlay() {
   arduboy.print(command_flags, HEX);
   arduboy.setCursor(80, 8);
   arduboy.print(anim_action);
+  arduboy.setCursor(24, 16);
+  arduboy.print(switch_anim_str);
+  arduboy.setCursor(24, 24);
+  arduboy.print(process_anim_str);
   
   arduboy.setCursor(96, 0);
   arduboy.print((uint8_t)anim, HEX);
@@ -98,8 +106,8 @@ void Player::draw(Camera camera) {
 
 
 void Player::checkCells() {
-  static int8_t* cx[CELL_CHECK_COUNT];
-  static int8_t* cy[CELL_CHECK_COUNT];
+  static int8_t cx[CELL_CHECK_COUNT];
+  static int8_t cy[CELL_CHECK_COUNT];
   //update cells
   uint32_t _x = x >> FBITS;
   uint32_t _y = y >> FBITS;
@@ -144,11 +152,16 @@ void Player::commandFromKeys() {
 }
 
 
-void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
+uint8_t Player::updateAnimFlags() {
   uint8_t anim_flags = 0;
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_DOWN, ((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x05) | ((cells & 0x0F) == 0x07));
   anim_flags = setFlagAsBool(anim_flags, AF_DIAG_UP,   ((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B));
   anim_flags = setFlagAsBool(anim_flags, AF_RIGHT,     dir == 1);
+  return anim_flags;
+}
+
+void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
+  uint8_t anim_flags = updateAnimFlags();
 
   // some anims block switching
   if (!forced)
@@ -157,21 +170,22 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
     case AN_JUMP:
       return;
   }
+  if (anim_action == _anim_action) return;
   anim_action = _anim_action;
   
   // these switch statements can be replaced with 2D array
   switch (_anim_action) {
     case AN_STAND:
-      weapon.dir = dir;
-      weapons.update(weapon);
-      weapons.show(weapon);
+      switch_anim_str = "stand";
       anim = anim_stand_set[anim_flags];
       break;
     case AN_WALK:
+      switch_anim_str = "walk";
       weapons.hide(weapon);
       anim = anim_walk_set[anim_flags];
       break;
     case AN_LAND:
+      switch_anim_str = "land";
       weapons.hide(weapon);
       frame = 0;
       anim_ended = false;
@@ -182,6 +196,7 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
         anim = anim_jumpland_r;
       break;
     case AN_JUMP:
+      switch_anim_str = "jump";
       weapons.hide(weapon);
       frame = 0;
       anim_ended = false;
@@ -192,6 +207,7 @@ void Player::switchAnim(uint8_t _anim_action, bool forced = false) {
         anim = anim_jumpstart_r;
       break;
     case AN_FALL:
+      switch_anim_str = "fall";
       weapons.hide(weapon);
       if (dir == -1)
         anim = anim_jump_l;
@@ -215,21 +231,66 @@ void Player::processAnim() {
    
   anim_ended = (frame == frame_count);
   frame = frame % frame_count;
- 
+
+  uint8_t anim_flags = updateAnimFlags();
+
   switch (anim_action) {
     case AN_WALK:
-      if (!landed) {
+      process_anim_str = "walk";
+      if (landed) {
+        switch (dir) {
+          case -1:        // WALK LEFT
+            if (((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))  // climbing up. Less cells checked, otherwise lifting in air after slope end
+              if ((cells & 0x40) > 0) // if head cell hit
+                break;   // prevent from moving
+              else
+                y -= WALKSPEED;
+            if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
+              y += WALKSPEED;
+            x -= WALKSPEED;
+            break;
+
+          case 1:         // WALK RIGHT
+            if (((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))  // climbing up. Less cells checked, otherwise lifting in air after slope end
+              if ((cells & 0x40) > 0) // if head cell hit
+                break;   // prevent from moving
+              else
+                y -= WALKSPEED;
+            if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
+              y += WALKSPEED;
+            x += WALKSPEED;
+            break;
+        };
+        anim = anim_walk_set[anim_flags];
+      } else {
         frame = 0;
         switchAnim(AN_FALL, true);
       }
-    case AN_STAND:
       break;
+
+    case AN_STAND:
+      process_anim_str = "stand";
+      if (!weapon.shown) {    // appearing weapon moved into processAnim
+        weapon.dir = dir;     // because in switchAnim weapon blinks between some animations
+        weapons.update(weapon);
+        weapons.show(weapon);
+      };
+      if ((command_flags & CF_UP) && can_move) {
+
+      };
+      if ((command_flags & CF_DOWN) && can_move) {
+
+      };
+      break;
+
     case AN_LAND:
+      process_anim_str = "land";
       if (anim_ended) {
         switchAnim(AN_STAND, true);
         can_move = true;
       }
       break;
+
     case AN_JUMP:
       if (anim_ended) {
         switchAnim(AN_FALL, true);
@@ -237,44 +298,29 @@ void Player::processAnim() {
       if (landed)
         can_move = true;
       break;
+
     case AN_FALL:
+      process_anim_str = "fall";
       if (landed)
         can_move = true;
       break;
+
   }
 }
 
 
 void Player::processControls() {
-    
   if (landed) {
     if ((command_flags & CF_LEFT) && can_move) {
       dir = -1;
       if ((cells & 0x10) == 0) {  // stop cell is free
-        if (((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))  // climbing up. Less cells checked, otherwise lifting in air after slope end
-          if ((cells & 0x40) > 0) // if head cell hit
-            return;   // prevent from moving
-          else
-            y -= WALKSPEED;
-        if (((cells & 0x0F) == 0x02) | ((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))
-          y += WALKSPEED;
-        x -= WALKSPEED;
         switchAnim(AN_WALK);
       } else
         switchAnim(AN_STAND);
-      
     };
     if ((command_flags & CF_RIGHT) && can_move) {
       dir = 1;
       if ((cells & 0x20) == 0) {  // stop cell is free
-        if (((cells & 0x0F) == 0x0A) | ((cells & 0x0F) == 0x0B))  // climbing up. Less cells checked, otherwise lifting in air after slope end
-          if ((cells & 0x40) > 0) // if head cell hit
-            return;   // prevent from moving
-          else
-            y -= WALKSPEED;
-        if (((cells & 0x0F) == 0x01) | ((cells & 0x0F) == 0x07) | ((cells & 0x0F) == 0x05))
-          y += WALKSPEED;
-        x += WALKSPEED;
         switchAnim(AN_WALK);
       } else
         switchAnim(AN_STAND);
@@ -307,11 +353,13 @@ void Player::processControls() {
 
 
 void Player::process() {
+  switch_anim_str = "";
+  process_anim_str = "";
   commandFromKeys();
   processControls();
 
   if (landed) {
-    if (command_flags == 0) 
+    if (command_flags == 0)
       switchAnim(AN_STAND);
   }
   
