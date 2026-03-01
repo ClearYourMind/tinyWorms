@@ -276,10 +276,12 @@ void Player::processAnim() {
         weapons.show(weapon);
       };
       if ((command_flags & CF_UP) && can_move) {
-
+        weapon.angle = max(weapon.angle - 1, -8);
+        weapons.update(weapon);
       };
       if ((command_flags & CF_DOWN) && can_move) {
-
+        weapon.angle = min(weapon.angle + 1, 8);
+        weapons.update(weapon);
       };
       break;
 

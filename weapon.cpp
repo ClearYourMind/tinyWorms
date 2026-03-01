@@ -41,8 +41,11 @@ void WeaponSystem::shoot(WeaponState& state) {
 
 void WeaponSystem::update(WeaponState& state) {
   int16_t _scale_y = state.scale * state.dir;
-  uint8_t _angle = (MAXANGLESEC + state.angle + ((1 - state.dir) << 3)) % MAXANGLESEC;
+  uint8_t _angle = state.dir == 1 ? (MAXANGLESEC + state.angle) % MAXANGLESEC : (MAXANGLESEC >> 1) - state.angle;
   state.model->transform(_angle, state.scale, _scale_y);
+  // dir == 1 ? (max_angle + a_local) % max_angle : (max_angle >> 1) - a_local;
+  // a_global = (max_angle + a_local) % max_angle 
+  // a_global =(max_angle >> 1) - a_local
 }
 
 
