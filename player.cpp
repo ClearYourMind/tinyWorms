@@ -272,16 +272,16 @@ void Player::processAnim() {
       process_anim_str = "stand";
       if (!weapon.shown) {    // appearing weapon moved into processAnim
         weapon.dir = dir;     // because in switchAnim weapon blinks between some animations
-        weapons.update(weapon);
+        weapons.update(weapon, x, y);
         weapons.show(weapon);
       };
       if ((command_flags & CF_UP) && can_move) {
         weapon.angle = max(weapon.angle - 1, -8);
-        weapons.update(weapon);
+        weapons.update(weapon, x, y);
       };
       if ((command_flags & CF_DOWN) && can_move) {
         weapon.angle = min(weapon.angle + 1, 8);
-        weapons.update(weapon);
+        weapons.update(weapon, x, y);
       };
       break;
 
