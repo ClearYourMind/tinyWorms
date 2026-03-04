@@ -10,7 +10,7 @@ const WeaponData WeaponSystem::weapon_list[WEAPON_TYPE_COUNT] = {
   .power = (1 << FBITS),
   .dir_offset_x = {2, 5},
   .offset_y = 10,
-  .shot_point_offset = {10, -1},
+  .shot_point_offset = {10, -3},
   .shot_period = 20
   }
 };
@@ -44,7 +44,7 @@ void WeaponSystem::hide(WeaponState& state) {
 void WeaponSystem::shoot(WeaponState& state) {
   if (!state.shown) return;
   if ((counter - state.last_counter) >= weapon_list[state.type].shot_period) {
-
+    
   };
 
 }
@@ -59,12 +59,13 @@ void WeaponSystem::update(WeaponState& state, int16_t player_x, int16_t player_y
   getSinCos(_angle, &_s, &_c);
 
   int16_t _shot_point_offset_x = (int16_t)weapon_list[state.type].shot_point_offset[0] << FBITS;
-  state.shot_point[0] = fmul(_shot_point_offset_x, _c) >> FBITS;
-  state.shot_point[1] = fmul(_shot_point_offset_x, _s) >> FBITS;
+  int16_t _shot_point_offset_y = (int16_t)weapon_list[state.type].shot_point_offset[1] << FBITS;
+  state.shot_point[0] = (fmul(_shot_point_offset_x, _c) - fmul(_shot_point_offset_y * state.dir, _s)) >> FBITS;
+  state.shot_point[1] = (fmul(_shot_point_offset_x, _s) + fmul(_shot_point_offset_y * state.dir, _c)) >> FBITS;
   state.shot_point[0] += player_x >> FBITS;
   state.shot_point[1] += player_y >> FBITS;
   state.shot_point[0] += weapon_list[state.type].dir_offset_x[state.dir == 1];
-  state.shot_point[1] += weapon_list[state.type].offset_y + weapon_list[state.type].shot_point_offset[1];
+  state.shot_point[1] += weapon_list[state.type].offset_y;
 }
 
 
