@@ -124,6 +124,13 @@ Player player;
 WeaponSystem weapons;
 
 
+void stop(int16_t frames) {
+  arduboy.display();
+  arduboy.waitNoButtons();
+  while (!arduboy.anyPressed(255));
+}
+
+
 void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
   arduboy.fillScreen(0);
   arduboy.setTextColor(WHITE);
@@ -136,11 +143,9 @@ void debug_stop(int32_t val_1, int32_t val_2, const char message[] = NULL) {
   arduboy.print(val_1);
   arduboy.setCursor(80, 40);
   arduboy.print(val_2);
-  arduboy.display();
-  arduboy.waitNoButtons();
-  while (!arduboy.anyPressed(255));
-
+  stop(100);
 }
+
 
 void debug_stop(int32_t value, const char message[] = NULL) {
   debug_stop(value, 0, message);
@@ -174,6 +179,14 @@ bool getCell(uint32_t *field[], uint8_t x, uint8_t y) {
   x = x % CELL_COUNT_X;
   y = y % CELL_COUNT_Y;
   return (_field[y] & (0x80000000 >> x)) != 0;
+}
+
+
+void drawCirclet(int16_t x, int16_t y, uint8_t color) {
+  arduboy.drawPixel(x-1, y,   color);
+  arduboy.drawPixel(x+1, y,   color);
+  arduboy.drawPixel(x  , y-1, color);
+  arduboy.drawPixel(x  , y+1, color);
 }
 
 
@@ -232,10 +245,10 @@ void loop() {
 
   counter++;
 
-  if (arduboy.justPressed(B_BUTTON)) {
-    debug_info_toggle = !debug_info_toggle;
-    arduboy.setFrameRate(debug_info_toggle ? 20 : 30);
-  }
+  // if (arduboy.justPressed(B_BUTTON)) {
+  //   debug_info_toggle = !debug_info_toggle;
+  //   arduboy.setFrameRate(debug_info_toggle ? 20 : 30);
+  // }
 
   // check overscroll
   if (camera.x > F_WIDTH)

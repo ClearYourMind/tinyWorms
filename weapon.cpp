@@ -8,9 +8,10 @@ const WeaponData WeaponSystem::weapon_list[WEAPON_TYPE_COUNT] = {
   .chargeable = false,
   .expl_radius = 1,
   .power = (1 << FBITS),
+  .distance = 64,
   .dir_offset_x = {2, 5},
   .offset_y = 10,
-  .shot_point_offset = {10, -3},
+  .shot_point_offset = {10, -1},
   .shot_period = 20
   }
 };
@@ -22,10 +23,7 @@ void WeaponSystem::draw(WeaponState& state, int8_t x, int8_t y) {
   y = y + weapon_list[state.type].offset_y;
   state.model->drawFill(x, y);
   state.model->drawOutline(x, y);
-  arduboy.drawPixel(state.shot_point[0]-1, state.shot_point[1],   counter % 2);
-  arduboy.drawPixel(state.shot_point[0]+1, state.shot_point[1],   counter % 2);
-  arduboy.drawPixel(state.shot_point[0],   state.shot_point[1]-1, counter % 2);
-  arduboy.drawPixel(state.shot_point[0],   state.shot_point[1]+1, counter % 2);
+  drawCirclet(state.shot_point[0], state.shot_point[1], counter % 2);
 }
 
 
@@ -44,7 +42,20 @@ void WeaponSystem::hide(WeaponState& state) {
 void WeaponSystem::shoot(WeaponState& state) {
   if (!state.shown) return;
   if ((counter - state.last_counter) >= weapon_list[state.type].shot_period) {
-    
+    int16_t _x = state.shot_point[0];
+    int16_t _y = state.shot_point[1];
+    int8_t _cx, _cy;
+    int16_t _s, _c;
+    getSinCos(state.global_angle, &_s, &_c);
+    for (int8_t _dist = 0; _dist < weapon_list[state.type].distance; _dist += 4) {
+      _x = state.shot_point[0] + (fmul(_dist, _c));
+      _y = state.shot_point[1] + (fmul(_dist, _s));
+      drawCirclet(_x, _y, 0);
+      drawCirclet(_x, _y-1, 1);
+      stop(100);
+      // _cx = _x << 2;
+      // _cy = _y << 2;
+    };
   };
 
 }
@@ -53,6 +64,7 @@ void WeaponSystem::shoot(WeaponState& state) {
 void WeaponSystem::update(WeaponState& state, int16_t player_x, int16_t player_y) {
   int16_t _scale_y = state.scale * state.dir;
   uint8_t _angle = state.dir == 1 ? (MAXANGLESEC + state.angle) % MAXANGLESEC : (MAXANGLESEC >> 1) - state.angle;
+  state.global_angle = _angle;
   state.model->transform(_angle, state.scale, _scale_y);
   // update shot point
   int16_t _s, _c;

@@ -5,6 +5,8 @@
 #include "model.h"
 
 extern uint16_t counter;
+extern void drawCirclet(int16_t x, int16_t y, uint8_t color);
+extern void stop(int16_t frames);
 
 enum WeaponType {
   WEAPON_PISTOL,
@@ -17,6 +19,7 @@ struct WeaponData {
   bool chargeable;
   uint8_t expl_radius;
   uint16_t power;
+  uint8_t distance;
   // model drawing offset
   int8_t dir_offset_x[2];
   int8_t offset_y;
@@ -29,6 +32,7 @@ struct WeaponState {
   Model* model;
   uint8_t type;
   int8_t angle; // -8 .. 8
+  uint8_t global_angle; // 0..31
   int8_t dir;   // -1 .. 1
   uint8_t scale;
   uint8_t anim_state;

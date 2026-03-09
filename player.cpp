@@ -148,7 +148,7 @@ void Player::commandFromKeys() {
   command_flags = setFlagAsBool(command_flags, CF_UP,    arduboy.pressed(UP_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_DOWN,  arduboy.pressed(DOWN_BUTTON));
   command_flags = setFlagAsBool(command_flags, CF_JUMP,  arduboy.pressed(A_BUTTON));
-//  command_flags = setFlagAsBool(command_flags, CF_SHOOT, arduboy.pressed(B_BUTTON));
+  command_flags = setFlagAsBool(command_flags, CF_SHOOT, arduboy.pressed(B_BUTTON));
 }
 
 
@@ -283,6 +283,9 @@ void Player::processAnim() {
         weapon.angle = min(weapon.angle + 1, 8);
         weapons.update(weapon, x, y);
       };
+      if ((command_flags & CF_SHOOT) && can_move) {
+        weapons.shoot(weapon);
+      }
       break;
 
     case AN_LAND:
