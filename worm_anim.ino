@@ -127,7 +127,12 @@ WeaponSystem weapons;
 void stop(int16_t frames) {
   arduboy.display();
   arduboy.waitNoButtons();
-  while (!arduboy.anyPressed(255));
+  while (!arduboy.anyPressed(255)) {
+    if (frames-- <= 0)
+      break;
+    delay(16);
+
+  }
 }
 
 

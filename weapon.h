@@ -4,9 +4,14 @@
 #include "models.h"
 #include "model.h"
 
-extern uint16_t counter;
 extern void drawCirclet(int16_t x, int16_t y, uint8_t color);
 extern void stop(int16_t frames);
+void setCell(uint32_t *field[], uint8_t x, uint8_t y, bool value);
+extern bool getCell(uint32_t *field[], uint8_t x, uint8_t y);
+
+extern uint16_t counter;
+extern uint32_t *field_ptr[4];
+
 
 enum WeaponType {
   WEAPON_PISTOL,

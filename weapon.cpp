@@ -42,6 +42,7 @@ void WeaponSystem::hide(WeaponState& state) {
 void WeaponSystem::shoot(WeaponState& state) {
   if (!state.shown) return;
   if ((counter - state.last_counter) >= weapon_list[state.type].shot_period) {
+    state.last_counter = counter;
     int16_t _x = state.shot_point[0];
     int16_t _y = state.shot_point[1];
     int8_t _cx, _cy;
@@ -50,11 +51,15 @@ void WeaponSystem::shoot(WeaponState& state) {
     for (int8_t _dist = 0; _dist < weapon_list[state.type].distance; _dist += 4) {
       _x = state.shot_point[0] + (fmul(_dist, _c));
       _y = state.shot_point[1] + (fmul(_dist, _s));
-      drawCirclet(_x, _y, 0);
-      drawCirclet(_x, _y-1, 1);
-      stop(100);
-      // _cx = _x << 2;
-      // _cy = _y << 2;
+      if ( ((_x < 0) || (_x > WIDTH * 2)) || ((_y < 0) || (_y > HEIGHT * 2)) )
+        break;
+
+      _cx = _x >> 2;
+      _cy = _y >> 2;
+      if (getCell(field_ptr, _cx, _cy)) {
+        setCell(field_ptr, _cx, _cy, false);
+        break;
+      }
     };
   };
 
